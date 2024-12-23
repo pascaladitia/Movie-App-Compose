@@ -1,18 +1,20 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.org.jetbrains.kotlin.kapt)
-    alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.room)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
     namespace = "com.pascal.movie"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.pascal.movie"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -90,6 +92,10 @@ android {
     }
 }
 
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -123,8 +129,18 @@ dependencies {
     implementation(libs.accompanist.pager)
     implementation(libs.feather.icons)
 
+    // Ktor
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.serialization)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+
     // Koin
     implementation(libs.koin)
+    implementation(libs.koin.annotations)
 
     // Paging
     implementation(libs.paging.common.ktx)
@@ -134,18 +150,9 @@ dependencies {
     // Navigation
     implementation(libs.navigation)
 
-    // Retrofit
-    api(libs.retrofit)
-    api(libs.retrofit.converter.gson)
-    api(libs.coroutines.core)
-    api(libs.coroutines.android)
-    api(libs.okhttp)
-    api(libs.okhttp.logging.interceptor)
-
     // Room
-    implementation(libs.roomRuntime)
-    implementation(libs.roomKtx)
-    kapt(libs.roomCompiler)
+    implementation(libs.room.runtime)
+    implementation(libs.room.runtime.android)
 
     // Chucker
     releaseImplementation(libs.chuckerReleaseNoOp)
