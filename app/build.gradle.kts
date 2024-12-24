@@ -153,6 +153,7 @@ dependencies {
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.runtime.android)
+    ksp(libs.room.compiler)
 
     // Chucker
     releaseImplementation(libs.chuckerReleaseNoOp)
