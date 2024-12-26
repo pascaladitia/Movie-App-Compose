@@ -59,13 +59,23 @@ fun HomeScreen(
         isContentVisible = true
     }
 
-    HomeContent(
-        isContentVisible = isContentVisible,
-        movies = movies,
-        onDetail = {
-
-        }
-    )
+//    HomeContent(
+//        isContentVisible = isContentVisible,
+//        movies = movies,
+//        onDetail = {
+//
+//        }
+//    )
+    val sliderList = remember {
+        mutableListOf(
+            "https://www.gstatic.com/webp/gallery/1.webp",
+            "https://www.gstatic.com/webp/gallery/2.webp",
+            "https://www.gstatic.com/webp/gallery/3.webp",
+            "https://www.gstatic.com/webp/gallery/4.webp",
+            "https://www.gstatic.com/webp/gallery/5.webp",
+        )
+    }
+    CustomSlider(sliderList = sliderList)
 }
 
 @Composable
