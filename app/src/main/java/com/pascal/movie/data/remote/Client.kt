@@ -37,7 +37,6 @@ val client = HttpClient {
 
     defaultRequest {
         header("Content-Type", "application/json")
-        header("api_key", BuildConfig.API_KEY)
     }
 
     install(HttpTimeout) {

@@ -38,7 +38,7 @@ android {
 
     productFlavors {
         create("dev") {
-            baseUrl = "https://api.themoviedb.org/3/movie"
+            baseUrl = "https://api.themoviedb.org"
             apiKey = "5dcbb8c388ece52afe59358591957a24"
             dimension = "environment"
             buildConfigField("String", "API_KEY", "\"" + apiKey + "\"")
@@ -46,7 +46,7 @@ android {
         }
 
         create("staging") {
-            baseUrl = "https://api.themoviedb.org/3/movie"
+            baseUrl = "https://api.themoviedb.org"
             apiKey = "5dcbb8c388ece52afe59358591957a24"
             dimension = "environment"
             buildConfigField("String", "API_KEY", "\"" + apiKey + "\"")
@@ -54,7 +54,7 @@ android {
         }
 
         create("prod") {
-            baseUrl = "https://api.themoviedb.org/3/movie"
+            baseUrl = "https://api.themoviedb.org"
             apiKey = "5dcbb8c388ece52afe59358591957a24"
             dimension = "environment"
             buildConfigField("String", "API_KEY", "\"" + apiKey + "\"")
