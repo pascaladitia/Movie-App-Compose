@@ -5,10 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
@@ -74,12 +77,10 @@ private fun HomeContent(
 ) {
     Column(
         modifier = modifier
-            .padding(vertical = 48.dp, horizontal = 20.dp)
             .fillMaxWidth()
     ) {
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(130.dp),
-            state = rememberLazyGridState()
+        LazyRow (
+            modifier = Modifier.fillMaxWidth()
         ) {
             items(count = movies?.itemCount ?: 0) { index ->
                 movies?.get(index)?.let {
@@ -133,7 +134,7 @@ fun MovieItemGrid(item: Movies, onMovieClicked: (Int) -> Unit) {
             contentDescription = item.title,
             modifier = Modifier
                 .width(150.dp)
-                .heightIn(min = 220.dp)
+                .height(220.dp)
                 .align(Alignment.Center),
             contentScale = ContentScale.Crop
         )
