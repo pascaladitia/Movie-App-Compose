@@ -47,8 +47,6 @@ import kotlin.math.absoluteValue
 fun CustomSlider(
     modifier: Modifier = Modifier,
     sliderList: MutableList<String>,
-    backwardIcon: ImageVector = Icons.Default.KeyboardArrowLeft,
-    forwardIcon: ImageVector = Icons.Default.KeyboardArrowRight,
     dotsActiveColor: Color = Color.DarkGray,
     dotsInActiveColor: Color = Color.LightGray,
     dotsSize: Dp = 10.dp,
@@ -72,9 +70,7 @@ fun CustomSlider(
                 contentPadding = pagerPaddingValues,
                 modifier = modifier
             ) { page ->
-                val pageOffset =
-                    (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-
+                val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
                 val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
                 val transX = with(density) { (pageOffset * 100.dp).toPx() }
                 val zIndex = 1f - pageOffset.absoluteValue
@@ -99,7 +95,8 @@ fun CustomSlider(
                         contentDescription = "Image",
                         contentScale = ContentScale.Crop,
                         placeholder = painterResource(id = R.drawable.no_thumbnail),
-                        modifier = Modifier.height(imageHeight)
+                        modifier = Modifier
+                            .height(imageHeight)
                     )
                 }
             }
@@ -108,11 +105,11 @@ fun CustomSlider(
         Row(
             modifier
                 .height(50.dp)
-                .fillMaxWidth(), horizontalArrangement = Arrangement.Center
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
         ) {
             repeat(sliderList.size) {
-                val color =
-                    if (pagerState.currentPage == it) dotsActiveColor else dotsInActiveColor
+                val color = if (pagerState.currentPage == it) dotsActiveColor else dotsInActiveColor
                 Box(
                     modifier = modifier
                         .padding(2.dp)
