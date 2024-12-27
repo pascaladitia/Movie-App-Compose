@@ -1,5 +1,8 @@
 package com.pascal.movie.ui.screen.home
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,11 +23,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -35,10 +43,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import androidx.compose.ui.zIndex
+import androidx.paging.compose.LazyPagingItems
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
+import coil.size.Size
 import com.pascal.movie.R
+import com.pascal.movie.domain.model.movie.Movies
+import com.pascal.movie.utils.Constant.POSTER_BASE_URL
+import com.pascal.movie.utils.Constant.W185
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -70,7 +83,8 @@ fun CustomSlider(
                 contentPadding = pagerPaddingValues,
                 modifier = modifier
             ) { page ->
-                val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                val pageOffset =
+                    (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
                 val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
                 val transX = with(density) { (pageOffset * 100.dp).toPx() }
                 val zIndex = 1f - pageOffset.absoluteValue
@@ -126,5 +140,135 @@ fun CustomSlider(
         }
     }
 }
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun LazyRowCorousel(
+    modifier: Modifier = Modifier,
+    movies: LazyPagingItems<Movies>?,
+    dotsActiveColor: Color = Color.DarkGray,
+    dotsInActiveColor: Color = Color.LightGray,
+    dotsSize: Dp = 6.dp,
+    pagerPaddingValues: PaddingValues = PaddingValues(horizontal = 65.dp),
+    imageCornerRadius: Dp = 16.dp,
+    imageHeight: Dp = 350.dp,
+) {
+    if (movies == null || movies.itemCount == 0) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Loading...", style = MaterialTheme.typography.bodySmall)
+        }
+        return
+    }
+
+    val pagerState = rememberPagerState(
+        initialPage = 1,
+        pageCount = { movies.itemCount }
+    )
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = modifier.fillMaxWidth()
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                contentPadding = pagerPaddingValues,
+                modifier = modifier
+            ) { page ->
+                val movie = movies[page]
+                if (movie == null) {
+                    Box(
+                        modifier = Modifier
+                            .height(imageHeight)
+                            .padding(10.dp)
+                            .clip(RoundedCornerShape(imageCornerRadius))
+                            .background(Color.Gray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Loading...")
+                    }
+                } else {
+                    val pageOffset =
+                        (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                    val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
+                    val transX = with(density) { (pageOffset * 100.dp).toPx() }
+                    val zIndex = 1f - pageOffset.absoluteValue
+
+                    Box(
+                        modifier = Modifier
+                            .graphicsLayer {
+                                scaleX = scaleFactor
+                                scaleY = scaleFactor
+                                translationX = transX
+                            }
+                            .zIndex(zIndex)
+                            .padding(10.dp)
+                            .shadow(20.dp)
+                            .clip(RoundedCornerShape(imageCornerRadius))
+                    ) {
+                        val url: String = POSTER_BASE_URL + W185 + movie.poster_path
+
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(url)
+                                .size(Size.ORIGINAL)
+                                .crossfade(true)
+                                .error(R.drawable.no_thumbnail)
+                                .build(),
+                            contentDescription = movie.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .height(imageHeight)
+                        )
+                    }
+                }
+            }
+        }
+
+        Row(
+            modifier
+                .height(50.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            val maxDots = 5
+            val startIndex = (pagerState.currentPage / maxDots) * maxDots
+
+            repeat(maxDots) { index ->
+                val actualIndex = startIndex + index
+
+                val size by animateDpAsState(
+                    targetValue = if (pagerState.currentPage == actualIndex) dotsSize * 1.5f else dotsSize,
+                    animationSpec = tween(durationMillis = 300), label = ""
+                )
+
+                val color by animateColorAsState(
+                    targetValue = if (pagerState.currentPage == actualIndex) dotsActiveColor else dotsInActiveColor,
+                    animationSpec = tween(durationMillis = 300), label = ""
+                )
+
+                Box(
+                    modifier = modifier
+                        .padding(2.dp)
+                        .clip(CircleShape)
+                        .size(size)
+                        .background(color)
+                        .clickable {
+                            if (actualIndex < movies.itemCount) {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(actualIndex)
+                                }
+                            }
+                        }
+                )
+            }
+        }
+    }
+}
+
 
 

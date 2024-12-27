@@ -4,10 +4,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,23 +55,13 @@ fun HomeScreen(
         isContentVisible = true
     }
 
-//    HomeContent(
-//        isContentVisible = isContentVisible,
-//        movies = movies,
-//        onDetail = {
-//
-//        }
-//    )
-    val sliderList = remember {
-        mutableListOf(
-            "https://www.gstatic.com/webp/gallery/1.webp",
-            "https://www.gstatic.com/webp/gallery/2.webp",
-            "https://www.gstatic.com/webp/gallery/3.webp",
-            "https://www.gstatic.com/webp/gallery/4.webp",
-            "https://www.gstatic.com/webp/gallery/5.webp",
-        )
-    }
-    CustomSlider(sliderList = sliderList)
+    HomeContent(
+        isContentVisible = isContentVisible,
+        movies = movies,
+        onDetail = {
+
+        }
+    )
 }
 
 @Composable
@@ -80,67 +74,20 @@ private fun HomeContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .padding(top = 48.dp)
     ) {
-        LazyRow (
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(count = movies?.itemCount ?: 0) { index ->
-                movies?.get(index)?.let {
-                    MovieItemGrid(it) {
-                        onDetail(it)
-                    }
-                }
-            }
+        Text(
+            text = "Trending",
+            style = MaterialTheme.typography.bodySmall
+        )
 
-            when {
-                movies?.loadState?.refresh is LoadState.Loading || movies?.loadState?.append is LoadState.Loading -> {
-                    repeat(6) {
-                        item {
-                            ShimmerAnimation()
-                        }
-                    }
-                }
+        Spacer(Modifier.height(16.dp))
 
-                movies?.loadState?.refresh is LoadState.Error || movies?.loadState?.append is LoadState.Error -> {
-                    //handle error
-                }
-            }
-        }
-    }
-
-}
-
-@Composable
-fun MovieItemGrid(item: Movies, onMovieClicked: (Int) -> Unit) {
-    val url: String = POSTER_BASE_URL + W185 + item.poster_path
-    val context = LocalContext.current
-    val model = remember {
-        ImageRequest.Builder(context)
-            .data(url)
-            .size(Size.ORIGINAL)
-            .crossfade(true)
-            .error(R.drawable.no_thumbnail)
-            .build()
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                onMovieClicked.invoke(item.id)
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        AsyncImage(
-            model = model,
-            contentDescription = item.title,
-            modifier = Modifier
-                .width(150.dp)
-                .height(220.dp)
-                .align(Alignment.Center),
-            contentScale = ContentScale.Crop
+        LazyRowCorousel(
+            movies = movies
         )
     }
+
 }
 
 
