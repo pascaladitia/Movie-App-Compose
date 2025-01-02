@@ -154,8 +154,16 @@ fun LazyRowCorousel(
     imageHeight: Dp = 350.dp,
 ) {
     if (movies == null || movies.itemCount == 0) {
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Loading...", style = MaterialTheme.typography.bodySmall)
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                "Empty",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
         return
     }
@@ -218,6 +226,7 @@ fun LazyRowCorousel(
                                 .size(Size.ORIGINAL)
                                 .crossfade(true)
                                 .error(R.drawable.no_thumbnail)
+                                .placeholder(R.drawable.loading)
                                 .build(),
                             contentDescription = movie.title,
                             contentScale = ContentScale.Crop,
