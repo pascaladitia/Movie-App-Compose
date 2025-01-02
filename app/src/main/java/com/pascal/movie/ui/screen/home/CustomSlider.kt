@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,21 +20,20 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -168,6 +167,8 @@ fun LazyRowCorousel(
         return
     }
 
+    var movie by remember { mutableStateOf<Movies?>(null) }
+
     val pagerState = rememberPagerState(
         initialPage = 1,
         pageCount = { movies.itemCount }
@@ -187,56 +188,60 @@ fun LazyRowCorousel(
                 contentPadding = pagerPaddingValues,
                 modifier = modifier
             ) { page ->
-                val movie = movies[page]
-                if (movie == null) {
-                    Box(
+                movie = movies[pagerState.currentPage]
+                val result = movies[page]
+
+                val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
+                val transX = with(density) { (pageOffset * 100.dp).toPx() }
+                val zIndex = 1f - pageOffset.absoluteValue
+
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            scaleX = scaleFactor
+                            scaleY = scaleFactor
+                            translationX = transX
+                        }
+                        .zIndex(zIndex)
+                        .padding(10.dp)
+                        .shadow(20.dp)
+                        .clip(RoundedCornerShape(imageCornerRadius))
+                ) {
+                    val url: String = POSTER_BASE_URL + W185 + result?.poster_path
+
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(url)
+                            .size(Size.ORIGINAL)
+                            .crossfade(true)
+                            .error(R.drawable.no_thumbnail)
+                            .placeholder(R.drawable.loading)
+                            .build(),
+                        contentDescription = result?.title,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .height(imageHeight)
-                            .padding(10.dp)
-                            .clip(RoundedCornerShape(imageCornerRadius))
-                            .background(Color.Gray),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Loading...")
-                    }
-                } else {
-                    val pageOffset =
-                        (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-                    val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
-                    val transX = with(density) { (pageOffset * 100.dp).toPx() }
-                    val zIndex = 1f - pageOffset.absoluteValue
-
-                    Box(
-                        modifier = Modifier
-                            .graphicsLayer {
-                                scaleX = scaleFactor
-                                scaleY = scaleFactor
-                                translationX = transX
-                            }
-                            .zIndex(zIndex)
-                            .padding(10.dp)
-                            .shadow(20.dp)
-                            .clip(RoundedCornerShape(imageCornerRadius))
-                    ) {
-                        val url: String = POSTER_BASE_URL + W185 + movie.poster_path
-
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(url)
-                                .size(Size.ORIGINAL)
-                                .crossfade(true)
-                                .error(R.drawable.no_thumbnail)
-                                .placeholder(R.drawable.loading)
-                                .build(),
-                            contentDescription = movie.title,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .height(imageHeight)
-                        )
-                    }
+                    )
                 }
             }
         }
+
+        Spacer(Modifier.height(12.dp))
+
+        Text(
+            movie?.title ?: "",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        Text(
+            movie?.release_date ?: "",
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Spacer(Modifier.height(16.dp))
 
         Row(
             modifier
