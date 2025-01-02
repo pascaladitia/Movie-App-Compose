@@ -1,7 +1,12 @@
 package com.pascal.movie.ui.screen.home
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -16,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -32,6 +38,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -49,6 +57,7 @@ import coil.size.Scale
 import coil.size.Size
 import com.pascal.movie.R
 import com.pascal.movie.domain.model.movie.Movies
+import com.pascal.movie.ui.component.screenUtils.ShimmerItem
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
 import kotlinx.coroutines.launch
@@ -153,17 +162,7 @@ fun LazyRowCorousel(
     imageHeight: Dp = 350.dp,
 ) {
     if (movies == null || movies.itemCount == 0) {
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(200.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                "Empty",
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
+        LazyRowShimmer()
         return
     }
 
@@ -216,7 +215,7 @@ fun LazyRowCorousel(
                             .size(Size.ORIGINAL)
                             .crossfade(true)
                             .error(R.drawable.no_thumbnail)
-                            .placeholder(R.drawable.loading)
+                            .placeholder(R.color.gray)
                             .build(),
                         contentDescription = result?.title,
                         contentScale = ContentScale.Crop,
@@ -283,6 +282,114 @@ fun LazyRowCorousel(
         }
     }
 }
+
+@Composable
+fun LazyRowShimmer(
+    modifier: Modifier = Modifier,
+    pagerPaddingValues: PaddingValues = PaddingValues(horizontal = 65.dp),
+    imageCornerRadius: Dp = 16.dp,
+    imageHeight: Dp = 350.dp,
+) {
+    val transition = rememberInfiniteTransition(label = "transition")
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+            RepeatMode.Reverse
+        ), label = ""
+    )
+
+    val shimmerColorShades = listOf(
+        Color.LightGray,
+        Color.Gray,
+        Color.LightGray
+    )
+
+    val brush = Brush.linearGradient(
+        colors = shimmerColorShades,
+        start = Offset(10f, 10f),
+        end = Offset(translateAnim, translateAnim)
+    )
+
+    val pagerState = rememberPagerState(
+        initialPage = 1,
+        pageCount = { 3 }
+    )
+    val density = LocalDensity.current
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = modifier.fillMaxWidth()
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                contentPadding = pagerPaddingValues,
+                modifier = modifier
+            ) { page ->
+                val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
+                val transX = with(density) { (pageOffset * 100.dp).toPx() }
+                val zIndex = 1f - pageOffset.absoluteValue
+
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            scaleX = scaleFactor
+                            scaleY = scaleFactor
+                            translationX = transX
+                        }
+                        .zIndex(zIndex)
+                        .padding(10.dp)
+                        .shadow(20.dp)
+                        .clip(RoundedCornerShape(imageCornerRadius))
+                ) {
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(imageHeight)
+                            .background(brush = brush)
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Spacer(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .width(150.dp)
+                .height(30.dp)
+                .background(brush = brush)
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        Spacer(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .width(80.dp)
+                .height(20.dp)
+                .background(brush = brush)
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        Spacer(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .width(60.dp)
+                .height(20.dp)
+                .background(brush = brush)
+        )
+
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
 
 
 
