@@ -23,8 +23,7 @@ class HomeViewModel(
     private val _movies = MutableStateFlow(PagingData.empty<Movies>())
     val movies: StateFlow<PagingData<Movies>> = _movies
 
-    private val _movieDetailUiState =
-        MutableStateFlow<UiState<MovieDetailMapping?>>(UiState.Loading)
+    private val _movieDetailUiState = MutableStateFlow<UiState<MovieDetailMapping?>>(UiState.Loading)
     val movieDetailUiState: StateFlow<UiState<MovieDetailMapping?>> = _movieDetailUiState
 
 

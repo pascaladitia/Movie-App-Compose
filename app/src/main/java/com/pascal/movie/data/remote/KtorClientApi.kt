@@ -33,6 +33,34 @@ object KtorClientApi {
         }.body()
     }
 
+    suspend fun getNowPlaying(page: Int? = null): MoviesCatalogDto {
+        return client.get("${BuildConfig.BASE_URL}/3/movie/now_playing"){
+            parameter("api_key", BuildConfig.API_KEY)
+            parameter("page", page)
+        }.body()
+    }
+
+    suspend fun getUpcoming(page: Int? = null): MoviesCatalogDto {
+        return client.get("${BuildConfig.BASE_URL}/3/movie/upcoming"){
+            parameter("api_key", BuildConfig.API_KEY)
+            parameter("page", page)
+        }.body()
+    }
+
+    suspend fun getTvShow(page: Int? = null): MoviesCatalogDto {
+        return client.get("${BuildConfig.BASE_URL}/3/trending/tv/day"){
+            parameter("api_key", BuildConfig.API_KEY)
+            parameter("page", page)
+        }.body()
+    }
+
+    suspend fun getTrendingAll(page: Int? = null): MoviesCatalogDto {
+        return client.get("${BuildConfig.BASE_URL}/3/trending/all/day"){
+            parameter("api_key", BuildConfig.API_KEY)
+            parameter("page", page)
+        }.body()
+    }
+
     suspend fun getReviews(id: Int): ReviewsCatalog {
         return client.get("${BuildConfig.BASE_URL}/3/movie/{$id}/reviews"){
             parameter("api_key", BuildConfig.API_KEY)

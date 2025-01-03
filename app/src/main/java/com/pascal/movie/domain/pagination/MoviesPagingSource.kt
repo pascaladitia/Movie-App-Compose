@@ -24,9 +24,13 @@ class MoviesPagingSource(
 
             val page = params.key ?: 1
             val moviesList = when (selection) {
-                0 -> KtorClientApi.getMovies(page).results
-                1 -> KtorClientApi.getTopRatedMovies(page).results
-                2 -> if (page == 1) localDataSource.getFavoriteMovies()?.map {
+                1 -> KtorClientApi.getTrendingAll(page).results
+                2 -> KtorClientApi.getTopRatedMovies(page).results
+                3 -> KtorClientApi.getNowPlaying(page).results
+                4 -> KtorClientApi.getUpcoming(page).results
+                5 -> KtorClientApi.getTvShow(page).results
+                6 -> KtorClientApi.getMovies(page).results
+                7 -> if (page == 1) localDataSource.getFavoriteMovies()?.map {
                     emptyMovies.copy(id = it.id, poster_path = it.posterPath)
                 }?.toList() ?: emptyList() else emptyList()
 

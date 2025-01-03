@@ -1,5 +1,6 @@
 package com.pascal.movie.ui.screen.home
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.pascal.movie.domain.model.movie.Movies
 import com.pascal.movie.ui.theme.MovieTheme
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -42,11 +44,12 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinInject<HomeViewModel>(),
     onDetail: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
     var isContentVisible by remember { mutableStateOf(false) }
     val movies: LazyPagingItems<Movies> = viewModel.movies.collectAsLazyPagingItems()
 
     LaunchedEffect(Unit) {
-        viewModel.loadMovies(0)
+        viewModel.loadMovies(1)
         delay(200)
         isContentVisible = true
     }
@@ -54,6 +57,11 @@ fun HomeScreen(
     HomeContent(
         isContentVisible = isContentVisible,
         movies = movies,
+        onCategory = {
+            coroutineScope.launch {
+                viewModel.loadMovies(it)
+            }
+        },
         onDetail = {
 
         }
@@ -65,10 +73,11 @@ private fun HomeContent(
     modifier: Modifier = Modifier,
     isContentVisible: Boolean = true,
     movies: LazyPagingItems<Movies>? = null,
+    onCategory: (Int) -> Unit,
     onDetail: (Int) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val tabTitles = listOf("Trending", "New", "Movies", "Serieals", "TV Shows")
+    val tabTitles = listOf("Trending", "Top Rated", "Now Playing", "Upcoming", "TV Shows")
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { tabTitles.size }
@@ -96,6 +105,7 @@ private fun HomeContent(
                             .align(Alignment.Center)
                             .clickable {
                             coroutineScope.launch {
+                                onCategory(index.plus(1))
                                 pagerState.animateScrollToPage(index)
                             }
                         },
@@ -117,10 +127,14 @@ private fun HomeContent(
         ) { page ->
             when (tabTitles[page]) {
                 "Trending" -> LazyRowCorousel(movies = movies)
-                "New" -> LazyRowCorousel(movies = movies)
-                "Movies" -> LazyRowCorousel(movies = movies)
+                "Top Rated" -> LazyRowCorousel(movies = movies)
+                "Now Playing" -> LazyRowCorousel(movies = movies)
+                "Upcoming" -> LazyRowCorousel(movies = movies)
+                "TV Shows" -> LazyRowCorousel(movies = movies)
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             modifier = Modifier
@@ -150,6 +164,7 @@ private fun HomePreview() {
     MovieTheme {
         HomeContent(
             movies = null,
+            onCategory = {},
             onDetail = {}
         )
     }

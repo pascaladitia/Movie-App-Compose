@@ -53,6 +53,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
@@ -70,6 +72,7 @@ import com.pascal.movie.utils.Constant.W185
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
+import kotlin.math.max
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -251,8 +254,12 @@ fun LazyRowCorousel(
             exit = fadeOut(tween(durationMillis = 500)) + slideOutVertically { fullHeight -> fullHeight }
         ) {
             Text(
-                movie?.title ?: "",
-                style = MaterialTheme.typography.headlineMedium
+                modifier = Modifier.padding(horizontal = 16.dp),
+                text = movie?.title ?: "Empty Title",
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -264,7 +271,7 @@ fun LazyRowCorousel(
             exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically()
         ) {
             Text(
-                movie?.release_date ?: "",
+                text = movie?.release_date ?: "Empty Date",
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -272,9 +279,7 @@ fun LazyRowCorousel(
         Spacer(Modifier.height(16.dp))
 
         Row(
-            modifier
-                .height(50.dp)
-                .fillMaxWidth(),
+            modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
             val maxDots = 5
