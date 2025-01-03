@@ -1,5 +1,6 @@
 package com.pascal.movie.ui.screen.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -8,6 +9,10 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,7 +34,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -60,6 +67,7 @@ import com.pascal.movie.domain.model.movie.Movies
 import com.pascal.movie.ui.component.screenUtils.ShimmerItem
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -167,6 +175,8 @@ fun LazyRowCorousel(
     }
 
     var movie by remember { mutableStateOf<Movies?>(null) }
+    var baseMovie by remember { mutableStateOf<Movies?>(null) }
+    var isSlide by remember { mutableStateOf(true) }
 
     val pagerState = rememberPagerState(
         initialPage = 1,
@@ -174,6 +184,13 @@ fun LazyRowCorousel(
     )
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
+
+    LaunchedEffect(baseMovie) {
+        isSlide = false
+        delay(300)
+        movie = baseMovie
+        isSlide = true
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -187,7 +204,7 @@ fun LazyRowCorousel(
                 contentPadding = pagerPaddingValues,
                 modifier = modifier
             ) { page ->
-                movie = movies[pagerState.currentPage]
+                baseMovie = movies[pagerState.currentPage]
                 val result = movies[page]
 
                 val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
@@ -228,17 +245,29 @@ fun LazyRowCorousel(
 
         Spacer(Modifier.height(12.dp))
 
-        Text(
-            movie?.title ?: "",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        AnimatedVisibility(
+            visible = isSlide,
+            enter = fadeIn(tween(durationMillis = 500)) + slideInVertically { fullHeight -> fullHeight },
+            exit = fadeOut(tween(durationMillis = 500)) + slideOutVertically { fullHeight -> fullHeight }
+        ) {
+            Text(
+                movie?.title ?: "",
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
 
         Spacer(Modifier.height(12.dp))
 
-        Text(
-            movie?.release_date ?: "",
-            style = MaterialTheme.typography.bodySmall
-        )
+        AnimatedVisibility(
+            visible = isSlide,
+            enter = fadeIn(tween(durationMillis = 300)) + slideInVertically(),
+            exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically()
+        ) {
+            Text(
+                movie?.release_date ?: "",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         Spacer(Modifier.height(16.dp))
 
