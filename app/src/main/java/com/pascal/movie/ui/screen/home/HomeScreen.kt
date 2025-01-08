@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -92,18 +93,23 @@ fun HomeScreen(
         viewModel.loadMovies2()
     }
 
-    HomeContent(
-        movies = movies,
-        movies2 = movies2,
-        onCategory = {
-            coroutineScope.launch {
-                viewModel.loadMovies(it)
-            }
-        },
-        onDetail = {
+    Surface(
+        modifier = modifier.padding(paddingValues),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        HomeContent(
+            movies = movies,
+            movies2 = movies2,
+            onCategory = {
+                coroutineScope.launch {
+                    viewModel.loadMovies(it)
+                }
+            },
+            onDetail = {
 
-        }
-    )
+            }
+        )
+    }
 
     LaunchedEffect(moviesState) {
         when (moviesState) {
@@ -147,10 +153,11 @@ private fun HomeContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(vertical = 56.dp)
             .verticalScroll(rememberScrollState())
             .animateContentSize()
     ) {
+        Spacer(Modifier.height(24.dp))
+
         ScrollableTabRow(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
@@ -249,7 +256,7 @@ private fun HomeContent(
             }
         }
 
-        Spacer(Modifier.height(80.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 

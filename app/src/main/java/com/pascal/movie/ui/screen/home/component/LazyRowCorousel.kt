@@ -75,7 +75,7 @@ import kotlin.math.absoluteValue
 fun LazyRowCorousel(
     modifier: Modifier = Modifier,
     movies: LazyPagingItems<Movies>?,
-    dotsActiveColor: Color = Color.DarkGray,
+    dotsActiveColor: Color = MaterialTheme.colorScheme.primary,
     dotsInActiveColor: Color = Color.LightGray,
     dotsSize: Dp = 6.dp,
     pagerPaddingValues: PaddingValues = PaddingValues(horizontal = 65.dp),
