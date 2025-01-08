@@ -1,4 +1,4 @@
-package com.pascal.movie.ui.screen.teams
+package com.pascal.movie.ui.screen.favorite
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -8,10 +8,10 @@ import com.pascal.movie.ui.theme.MovieTheme
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun TeamScreen(
+fun FavoriteScreen(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
-    viewModel: TeamViewModel = koinViewModel(),
+    viewModel: FavoriteViewModel = koinViewModel(),
     onDetail: () -> Unit
 ) {
 
@@ -20,6 +20,6 @@ fun TeamScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun TeamPreview() {
+private fun FavoritePreview() {
     MovieTheme {  }
 }

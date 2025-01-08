@@ -8,11 +8,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.pascal.movie.ui.screen.favorite.FavoriteScreen
 import com.pascal.movie.ui.screen.home.HomeScreen
-import com.pascal.movie.ui.screen.live.LiveScreen
 import com.pascal.movie.ui.screen.profile.ProfileScreen
 import com.pascal.movie.ui.screen.splash.SplashScreen
-import com.pascal.movie.ui.screen.teams.TeamScreen
 
 @Composable
 fun RouteScreen(
@@ -25,8 +24,7 @@ fun RouteScreen(
         bottomBar = {
             if (currentRoute in listOf(
                     Screen.HomeScreen.route,
-                    Screen.TeamScreen.route,
-                    Screen.LiveScreen.route,
+                    Screen.FavoriteScreen.route,
                     Screen.ProfileScreen.route
                 )) {
                 BottomBar(navController)
@@ -57,16 +55,8 @@ fun RouteScreen(
                     }
                 )
             }
-            composable(route = Screen.TeamScreen.route) {
-                TeamScreen(
-                    paddingValues = paddingValues,
-                    onDetail = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            composable(route = Screen.LiveScreen.route) {
-                LiveScreen(
+            composable(route = Screen.FavoriteScreen.route) {
+                FavoriteScreen(
                     paddingValues = paddingValues,
                     onDetail = {
                         navController.popBackStack()

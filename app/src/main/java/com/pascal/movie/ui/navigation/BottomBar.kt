@@ -44,14 +44,9 @@ fun BottomBar(
                     screen = Screen.HomeScreen
                 ),
                 NavigationItem(
-                    title = "Team",
-                    icon = FeatherIcons.Info,
-                    screen = Screen.TeamScreen
-                ),
-                NavigationItem(
-                    title = "Live",
+                    title = "Favorite",
                     icon = FeatherIcons.Video,
-                    screen = Screen.LiveScreen
+                    screen = Screen.FavoriteScreen
                 ),
                 NavigationItem(
                     title = "Profile",
@@ -62,7 +57,7 @@ fun BottomBar(
             navigationItems.map { item ->
                 NavigationBarItem(
                     icon = {
-                        val iconSize = if (currentRoute == item.screen.route) 28.dp else 24.dp
+                        val iconSize = if (currentRoute == item.screen.route) 26.dp else 24.dp
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.title,

@@ -5,9 +5,8 @@ import com.pascal.movie.data.local.database.AppDatabase
 import com.pascal.movie.data.local.repository.LocalRepository
 import com.pascal.movie.data.repository.Repository
 import com.pascal.movie.ui.screen.home.HomeViewModel
-import com.pascal.movie.ui.screen.live.LiveViewModel
+import com.pascal.movie.ui.screen.favorite.FavoriteViewModel
 import com.pascal.movie.ui.screen.profile.ProfileViewModel
-import com.pascal.movie.ui.screen.teams.TeamViewModel
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
@@ -23,7 +22,6 @@ val appModule = module {
     single { LocalRepository(get()) }
     single{ Repository(get()) }
     singleOf(::HomeViewModel)
-    singleOf(::LiveViewModel)
-    singleOf(::TeamViewModel)
+    singleOf(::FavoriteViewModel)
     singleOf(::ProfileViewModel)
 }
