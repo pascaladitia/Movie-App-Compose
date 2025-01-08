@@ -130,6 +130,7 @@ private fun HomeContent(
     onDetail: (Int) -> Unit
 ) {
     var isContentVisible by remember { mutableStateOf(false) }
+    var hasAnimated by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         delay(1000)
@@ -237,6 +238,10 @@ private fun HomeContent(
                 MovieItemGrid(
                     item = data,
                     index = index,
+                    hasAnimated = hasAnimated,
+                    onAnimated = {
+                        hasAnimated = true
+                    },
                     onMovieClicked = {
                         onDetail(it)
                     }
@@ -253,9 +258,11 @@ fun MovieItemGrid(
     modifier: Modifier = Modifier,
     item: Movies,
     index: Int,
+    hasAnimated: Boolean,
+    onAnimated: () -> Unit,
     onMovieClicked: (Int) -> Unit
 ) {
-    var isContentVisible by remember { mutableStateOf(true) }
+    var isContentVisible by remember { mutableStateOf(false) }
     var isPressed by remember { mutableStateOf(false) }
 
     val scale by animateFloatAsState(
@@ -265,9 +272,13 @@ fun MovieItemGrid(
     )
 
     LaunchedEffect(Unit) {
-        isContentVisible = false
-        delay(200 * index.toLong())
-        isContentVisible = true
+        if (!hasAnimated) {
+            delay(200 * index.toLong())
+            isContentVisible = true
+            onAnimated()
+        } else {
+            isContentVisible = true
+        }
     }
 
     val url: String = POSTER_BASE_URL + W185 + item.poster_path
