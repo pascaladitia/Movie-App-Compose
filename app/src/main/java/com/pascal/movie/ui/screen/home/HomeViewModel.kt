@@ -23,6 +23,9 @@ class HomeViewModel(
     private val _movies = MutableStateFlow(PagingData.empty<Movies>())
     val movies: StateFlow<PagingData<Movies>> = _movies
 
+    private val _movies2 = MutableStateFlow(PagingData.empty<Movies>())
+    val movies2: StateFlow<PagingData<Movies>> = _movies
+
     private val _movieDetailUiState = MutableStateFlow<UiState<MovieDetailMapping?>>(UiState.Loading)
     val movieDetailUiState: StateFlow<UiState<MovieDetailMapping?>> = _movieDetailUiState
 
@@ -32,6 +35,14 @@ class HomeViewModel(
             .cachedIn(viewModelScope)
             .collect {
                 _movies.value = it
+            }
+    }
+
+    suspend fun loadMovies2(selection: Int) {
+        repository.getMovies(selection)
+            .cachedIn(viewModelScope)
+            .collect {
+                _movies2.value = it
             }
     }
 

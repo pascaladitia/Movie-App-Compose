@@ -1,4 +1,4 @@
-package com.pascal.movie.ui.screen.home
+package com.pascal.movie.ui.screen.home.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -36,7 +36,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,7 +51,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -62,103 +60,14 @@ import androidx.compose.ui.zIndex
 import androidx.paging.compose.LazyPagingItems
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import coil.size.Scale
 import coil.size.Size
 import com.pascal.movie.R
 import com.pascal.movie.domain.model.movie.Movies
-import com.pascal.movie.ui.component.screenUtils.ShimmerItem
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
-import kotlin.math.max
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun CustomSlider(
-    modifier: Modifier = Modifier,
-    sliderList: MutableList<String>,
-    dotsActiveColor: Color = Color.DarkGray,
-    dotsInActiveColor: Color = Color.LightGray,
-    dotsSize: Dp = 10.dp,
-    pagerPaddingValues: PaddingValues = PaddingValues(horizontal = 65.dp),
-    imageCornerRadius: Dp = 16.dp,
-    imageHeight: Dp = 250.dp,
-) {
-    val pagerState = rememberPagerState(pageCount = { sliderList.size })
-    val scope = rememberCoroutineScope()
-    val density = LocalDensity.current
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(
-            modifier = modifier.fillMaxWidth()
-        ) {
-            HorizontalPager(
-                state = pagerState,
-                contentPadding = pagerPaddingValues,
-                modifier = modifier
-            ) { page ->
-                val pageOffset =
-                    (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-                val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
-                val transX = with(density) { (pageOffset * 100.dp).toPx() }
-                val zIndex = 1f - pageOffset.absoluteValue
-
-                Box(
-                    modifier = Modifier
-                        .graphicsLayer {
-                            scaleX = scaleFactor
-                            scaleY = scaleFactor
-                            translationX = transX
-                        }
-                        .zIndex(zIndex)
-                        .padding(10.dp)
-                        .clip(RoundedCornerShape(imageCornerRadius))
-                ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .scale(Scale.FILL)
-                            .crossfade(true)
-                            .data(sliderList[page])
-                            .build(),
-                        contentDescription = "Image",
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(id = R.drawable.no_thumbnail),
-                        modifier = Modifier
-                            .height(imageHeight)
-                    )
-                }
-            }
-        }
-
-        Row(
-            modifier
-                .height(50.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(sliderList.size) {
-                val color = if (pagerState.currentPage == it) dotsActiveColor else dotsInActiveColor
-                Box(
-                    modifier = modifier
-                        .padding(2.dp)
-                        .clip(CircleShape)
-                        .size(dotsSize)
-                        .background(color)
-                        .clickable {
-                            scope.launch {
-                                pagerState.animateScrollToPage(it)
-                            }
-                        }
-                )
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
