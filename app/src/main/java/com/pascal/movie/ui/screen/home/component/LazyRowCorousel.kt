@@ -63,6 +63,7 @@ import coil.request.ImageRequest
 import coil.size.Size
 import com.pascal.movie.R
 import com.pascal.movie.domain.model.movie.Movies
+import com.pascal.movie.ui.theme.LightGray
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
 import kotlinx.coroutines.delay
@@ -133,7 +134,7 @@ fun LazyRowCorousel(
                         }
                         .zIndex(zIndex)
                         .padding(10.dp)
-                        .shadow(20.dp)
+                        .shadow(20.dp, spotColor = LightGray)
                         .clip(RoundedCornerShape(imageCornerRadius))
                 ) {
                     val url: String = POSTER_BASE_URL + W185 + result?.poster_path

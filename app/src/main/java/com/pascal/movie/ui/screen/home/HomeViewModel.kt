@@ -1,5 +1,6 @@
 package com.pascal.movie.ui.screen.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -23,12 +24,11 @@ class HomeViewModel(
     private val _movies = MutableStateFlow(PagingData.empty<Movies>())
     val movies: StateFlow<PagingData<Movies>> = _movies
 
-    private val _movies2 = MutableStateFlow(PagingData.empty<Movies>())
-    val movies2: StateFlow<PagingData<Movies>> = _movies
+    private val _movies2 = MutableStateFlow<UiState<List<Movies>>>(UiState.Empty)
+    val movies2: StateFlow<UiState<List<Movies>>> = _movies2
 
     private val _movieDetailUiState = MutableStateFlow<UiState<MovieDetailMapping?>>(UiState.Loading)
     val movieDetailUiState: StateFlow<UiState<MovieDetailMapping?>> = _movieDetailUiState
-
 
     suspend fun loadMovies(selection: Int) {
         repository.getMovies(selection)
@@ -38,12 +38,18 @@ class HomeViewModel(
             }
     }
 
-    suspend fun loadMovies2(selection: Int) {
-        repository.getMovies(selection)
-            .cachedIn(viewModelScope)
-            .collect {
-                _movies2.value = it
+    suspend fun loadMovies2() {
+        try {
+            val result = repository.getMoviesCatalog(1)
+
+            if (result.isEmpty()) {
+                _movies2.value = UiState.Empty
+            } else {
+                _movies2.value = UiState.Success(result)
             }
+        } catch (e: Exception) {
+            _movies2.value = UiState.Error(e.localizedMessage ?: e.message.toString())
+        }
     }
 
     suspend fun loadDetailMovie(id: Int) {
