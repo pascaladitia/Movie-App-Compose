@@ -4,6 +4,7 @@ import androidx.room.Room
 import com.pascal.movie.data.local.database.AppDatabase
 import com.pascal.movie.data.local.repository.LocalRepository
 import com.pascal.movie.data.repository.Repository
+import com.pascal.movie.ui.screen.detail.DetailViewModel
 import com.pascal.movie.ui.screen.home.HomeViewModel
 import com.pascal.movie.ui.screen.favorite.FavoriteViewModel
 import com.pascal.movie.ui.screen.profile.ProfileViewModel
@@ -24,4 +25,5 @@ val appModule = module {
     singleOf(::HomeViewModel)
     singleOf(::FavoriteViewModel)
     singleOf(::ProfileViewModel)
+    singleOf(::DetailViewModel)
 }

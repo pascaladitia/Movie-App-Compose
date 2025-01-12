@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.pascal.movie.ui.screen.detail.DetailScreen
 import com.pascal.movie.ui.screen.favorite.FavoriteScreen
 import com.pascal.movie.ui.screen.home.HomeScreen
 import com.pascal.movie.ui.screen.profile.ProfileScreen
@@ -51,7 +52,7 @@ fun RouteScreen(
                 HomeScreen(
                     paddingValues = paddingValues,
                     onDetail = {
-                        navController.popBackStack()
+                        navController.navigate(Screen.DetailScreen.createRoute(it))
                     }
                 )
             }
@@ -63,10 +64,11 @@ fun RouteScreen(
                     }
                 )
             }
-            composable(route = Screen.ProfileScreen.route) {
-                ProfileScreen(
+            composable(route = Screen.DetailScreen.route) {
+                DetailScreen(
                     paddingValues = paddingValues,
-                    onDetail = {
+                    id = it.arguments?.getString("id") ?: "",
+                    onNavBack = {
                         navController.popBackStack()
                     }
                 )

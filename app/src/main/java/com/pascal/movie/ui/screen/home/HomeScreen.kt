@@ -1,6 +1,5 @@
 package com.pascal.movie.ui.screen.home
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -9,6 +8,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +25,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -53,7 +53,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
@@ -62,8 +61,6 @@ import coil.size.Size
 import com.pascal.movie.R
 import com.pascal.movie.domain.base.UiState
 import com.pascal.movie.domain.model.movie.Movies
-import com.pascal.movie.ui.component.dialog.DIALOG_ERROR
-import com.pascal.movie.ui.component.screenUtils.ShimmerAnimation
 import com.pascal.movie.ui.screen.home.component.LazyRowCorousel
 import com.pascal.movie.ui.theme.MovieTheme
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
@@ -77,7 +74,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
     viewModel: HomeViewModel = koinInject<HomeViewModel>(),
-    onDetail: () -> Unit
+    onDetail: (Int) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val movies: LazyPagingItems<Movies> = viewModel.movies.collectAsLazyPagingItems()
@@ -106,7 +103,7 @@ fun HomeScreen(
                 }
             },
             onDetail = {
-
+                onDetail(it)
             }
         )
     }
@@ -135,11 +132,11 @@ private fun HomeContent(
     onCategory: (Int) -> Unit,
     onDetail: (Int) -> Unit
 ) {
+    val coroutine = rememberCoroutineScope()
     var isContentVisible by remember { mutableStateOf(false) }
     var hasAnimated by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(1000)
         isContentVisible = true
     }
 
@@ -158,49 +155,61 @@ private fun HomeContent(
     ) {
         Spacer(Modifier.height(24.dp))
 
-        ScrollableTabRow(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
-            selectedTabIndex = pagerState.currentPage,
-            containerColor = Color.Transparent,
-            edgePadding = 0.dp,
-            divider = {},
-            indicator = {}
+        AnimatedVisibility(
+            visible = isContentVisible,
+            enter = fadeIn(tween(durationMillis = 500)) + slideInHorizontally(tween(1000)),
+            exit = fadeOut(tween(durationMillis = 500)) + slideOutHorizontally(tween(1000)) { it }
         ) {
-            tabTitles.forEachIndexed { index, title ->
-                Box {
-                    Text(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .clickable {
-                                coroutineScope.launch {
-                                    onCategory(index.plus(1))
-                                    pagerState.animateScrollToPage(index)
-                                }
-                            },
-                        text = title,
-                        style = if (pagerState.currentPage == index) MaterialTheme.typography.titleMedium
-                        else MaterialTheme.typography.bodySmall,
-                        color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurface,
-                    )
+            ScrollableTabRow(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                selectedTabIndex = pagerState.currentPage,
+                containerColor = Color.Transparent,
+                edgePadding = 0.dp,
+                divider = {},
+                indicator = {}
+            ) {
+                tabTitles.forEachIndexed { index, title ->
+                    Box {
+                        Text(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .clickable {
+                                    coroutineScope.launch {
+                                        onCategory(index.plus(1))
+                                        pagerState.animateScrollToPage(index)
+                                    }
+                                },
+                            text = title,
+                            style = if (pagerState.currentPage == index) MaterialTheme.typography.titleMedium
+                            else MaterialTheme.typography.bodySmall,
+                            color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxWidth()
-        ) { page ->
-            when (tabTitles[page]) {
-                "Trending" -> LazyRowCorousel(movies = movies)
-                "Top Rated" -> LazyRowCorousel(movies = movies)
-                "Now Playing" -> LazyRowCorousel(movies = movies)
-                "Upcoming" -> LazyRowCorousel(movies = movies)
-                "TV Shows" -> LazyRowCorousel(movies = movies)
+        AnimatedVisibility(
+            visible = isContentVisible,
+            enter = fadeIn(tween(durationMillis = 500)),
+            exit = fadeOut(tween(durationMillis = 500)) + slideOutHorizontally(tween(1000))
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth()
+            ) { page ->
+                LazyRowCorousel(movies = movies) {
+                    coroutine.launch {
+                        isContentVisible = false
+                        delay(1000)
+                        onDetail(it)
+                    }
+                }
             }
         }
 
@@ -245,12 +254,17 @@ private fun HomeContent(
                 MovieItemGrid(
                     item = data,
                     index = index,
+                    isContentVisible = isContentVisible,
                     hasAnimated = hasAnimated,
                     onAnimated = {
                         hasAnimated = true
                     },
-                    onMovieClicked = {
-                        onDetail(it)
+                    onDetail = {
+                        coroutine.launch {
+                            isContentVisible = false
+                            delay(1000)
+                            onDetail(it)
+                        }
                     }
                 )
             }
@@ -265,11 +279,12 @@ fun MovieItemGrid(
     modifier: Modifier = Modifier,
     item: Movies,
     index: Int,
+    isContentVisible: Boolean = true,
     hasAnimated: Boolean,
     onAnimated: () -> Unit,
-    onMovieClicked: (Int) -> Unit
+    onDetail: (Int) -> Unit
 ) {
-    var isContentVisible by remember { mutableStateOf(false) }
+    var isAnimation by remember { mutableStateOf(false) }
     var isPressed by remember { mutableStateOf(false) }
 
     val scale by animateFloatAsState(
@@ -278,13 +293,17 @@ fun MovieItemGrid(
         label = ""
     )
 
-    LaunchedEffect(Unit) {
-        if (!hasAnimated) {
-            delay(200 * index.toLong())
-            isContentVisible = true
-            onAnimated()
+    LaunchedEffect(isContentVisible) {
+        if (isContentVisible) {
+            if (!hasAnimated) {
+                delay(200 * index.toLong())
+                isAnimation = true
+                onAnimated()
+            } else {
+                isAnimation = true
+            }
         } else {
-            isContentVisible = true
+            isAnimation = false
         }
     }
 
@@ -301,9 +320,9 @@ fun MovieItemGrid(
     }
 
     AnimatedVisibility(
-        visible = isContentVisible,
-        enter = scaleIn(initialScale = 0.8f, animationSpec = tween(durationMillis = 1000)),
-        exit = scaleOut(targetScale = 1.0f, animationSpec = tween(durationMillis = 1000))
+        visible = isAnimation,
+        enter = fadeIn(tween(500)) + scaleIn(initialScale = 0.8f, animationSpec = tween(durationMillis = 1000)),
+        exit = fadeOut(tween(500)) + scaleOut(targetScale = 0.8f, animationSpec = tween(durationMillis = 500))
     ) {
         Box(
             modifier = modifier
@@ -316,7 +335,7 @@ fun MovieItemGrid(
                             isPressed = true
                             tryAwaitRelease()
                             isPressed = false
-                            onMovieClicked.invoke(item.id)
+                            onDetail.invoke(item.id)
                         }
                     )
                 },

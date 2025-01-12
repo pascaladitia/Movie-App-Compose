@@ -13,7 +13,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -70,7 +69,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LazyRowCorousel(
     modifier: Modifier = Modifier,
@@ -81,6 +79,7 @@ fun LazyRowCorousel(
     pagerPaddingValues: PaddingValues = PaddingValues(horizontal = 65.dp),
     imageCornerRadius: Dp = 16.dp,
     imageHeight: Dp = 350.dp,
+    onDetail: (Int) -> Unit
 ) {
     if (movies == null || movies.itemCount == 0) {
         LazyRowShimmer()
@@ -136,6 +135,7 @@ fun LazyRowCorousel(
                         .padding(10.dp)
                         .shadow(20.dp, spotColor = LightGray)
                         .clip(RoundedCornerShape(imageCornerRadius))
+                        .clickable { onDetail(result?.id ?: 0) }
                 ) {
                     val url: String = POSTER_BASE_URL + W185 + result?.poster_path
 
