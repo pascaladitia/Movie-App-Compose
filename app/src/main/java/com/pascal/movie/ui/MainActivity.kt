@@ -13,7 +13,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MovieTheme(
-                darkTheme = true
+                darkTheme = true,
+                dynamicColor = false
             ) {
                 RouteScreen()
             }
