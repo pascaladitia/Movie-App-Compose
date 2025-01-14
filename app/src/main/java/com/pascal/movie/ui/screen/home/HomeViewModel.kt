@@ -27,9 +27,6 @@ class HomeViewModel(
     private val _movies2 = MutableStateFlow<UiState<List<Movies>>>(UiState.Empty)
     val movies2: StateFlow<UiState<List<Movies>>> = _movies2
 
-    private val _movieDetailUiState = MutableStateFlow<UiState<MovieDetailMapping?>>(UiState.Loading)
-    val movieDetailUiState: StateFlow<UiState<MovieDetailMapping?>> = _movieDetailUiState
-
     suspend fun loadMovies(selection: Int) {
         repository.getMovies(selection)
             .cachedIn(viewModelScope)
@@ -49,34 +46,6 @@ class HomeViewModel(
             }
         } catch (e: Exception) {
             _movies2.value = UiState.Error(e.localizedMessage ?: e.message.toString())
-        }
-    }
-
-    suspend fun loadDetailMovie(id: Int) {
-        try {
-            val movie = repository.getSingleMovie(id)
-            val videos = repository.getMovieVideos(id)
-            val reviews = repository.getMovieReviews(id)
-            val favorite = database.getFavoriteMovie(id)
-
-            val mapping = MovieDetailMapping(
-                reviews.results,
-                videos.results,
-                movie,
-                favorite
-            )
-
-            _movieDetailUiState.value = UiState.Success(mapping)
-        } catch (e: Exception) {
-            _movieDetailUiState.value = UiState.Error(e.message.toString())
-        }
-    }
-
-    suspend fun updateFavMovie(item: FavoritesEntity, checkFav: Boolean) {
-        if (checkFav) {
-            database.insertFavoriteItem(item)
-        } else {
-            database.deleteFavoriteItem(item)
         }
     }
 

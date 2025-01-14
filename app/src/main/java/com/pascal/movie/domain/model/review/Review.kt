@@ -5,11 +5,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Review(
-    val author: String,
-    val author_details: AuthorDetails,
-    val content: String,
-    val created_at: String,
-    val id: String,
-    val updated_at: String,
-    val url: String
+    val author: String? = null,
+    val author_details: AuthorDetails? = null,
+    val content: String? = null,
+    val created_at: String? = null,
+    val id: String? = null,
+    val updated_at: String? = null,
+    val url: String? = null
 )

@@ -4,7 +4,7 @@ import androidx.paging.PagingData
 import com.pascal.movie.domain.model.dashboard.ResponseDashboard
 import com.pascal.movie.domain.model.movie.Movies
 import com.pascal.movie.domain.model.video.VideosCatalog
-import com.pascal.movieku_compose.data.remote.dtos.ReviewsCatalog
+import com.pascal.movie.domain.model.review.ReviewsCatalog
 import kotlinx.coroutines.flow.Flow
 
 interface RepositoryImpl {

@@ -5,12 +5,10 @@ import com.pascal.movie.domain.model.dashboard.ResponseDashboard
 import com.pascal.movie.domain.model.movie.Movies
 import com.pascal.movie.domain.model.movie.MoviesCatalogDto
 import com.pascal.movie.domain.model.video.VideosCatalog
-import com.pascal.movieku_compose.data.remote.dtos.ReviewsCatalog
+import com.pascal.movie.domain.model.review.ReviewsCatalog
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.parameter
-import io.ktor.http.parameters
 import org.koin.core.annotation.Single
 
 @Single
@@ -62,19 +60,19 @@ object KtorClientApi {
     }
 
     suspend fun getReviews(id: Int): ReviewsCatalog {
-        return client.get("${BuildConfig.BASE_URL}/3/movie/{$id}/reviews"){
+        return client.get("${BuildConfig.BASE_URL}/3/movie/$id/reviews"){
             parameter("api_key", BuildConfig.API_KEY)
         }.body()
     }
 
     suspend fun getVideos(id: Int): VideosCatalog {
-        return client.get("${BuildConfig.BASE_URL}/3/movie/{$id}/videos"){
+        return client.get("${BuildConfig.BASE_URL}/3/movie/$id/videos"){
             parameter("api_key", BuildConfig.API_KEY)
         }.body()
     }
 
     suspend fun getSingleMovie(id: Int): Movies {
-        return client.get("${BuildConfig.BASE_URL}/3/movie/{$id}"){
+        return client.get("${BuildConfig.BASE_URL}/3/movie/$id"){
             parameter("api_key", BuildConfig.API_KEY)
         }.body()
     }

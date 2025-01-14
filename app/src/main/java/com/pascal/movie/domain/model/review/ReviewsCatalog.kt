@@ -1,11 +1,12 @@
-package com.pascal.movieku_compose.data.remote.dtos
+package com.pascal.movie.domain.model.review
 
-import com.pascal.movie.domain.model.review.Review
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ReviewsCatalog(
-    val id: Int,
-    val page: Int,
-    val results: List<Review>,
-    val total_pages: Int,
-    val total_results: Int
+    val id: Int? = null,
+    val page: Int? = null,
+    val results: List<Review>? = null,
+    val total_pages: Int? = null,
+    val total_results: Int? = null
 )
