@@ -194,21 +194,18 @@ private fun HomeContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        AnimatedVisibility(
-            visible = isContentVisible,
-            enter = fadeIn(tween(durationMillis = 500)),
-            exit = fadeOut(tween(durationMillis = 500)) + slideOutHorizontally(tween(1000))
-        ) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxWidth()
-            ) { page ->
-                LazyRowCorousel(movies = movies) {
-                    coroutine.launch {
-                        isContentVisible = false
-                        delay(1000)
-                        onDetail(it)
-                    }
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth()
+        ) { page ->
+            LazyRowCorousel(
+                isContentVisible = isContentVisible,
+                movies = movies
+            ) {
+                coroutine.launch {
+                    isContentVisible = false
+                    delay(1000)
+                    onDetail(it)
                 }
             }
         }
@@ -321,8 +318,14 @@ fun MovieItemGrid(
 
     AnimatedVisibility(
         visible = isAnimation,
-        enter = fadeIn(tween(500)) + scaleIn(initialScale = 0.8f, animationSpec = tween(durationMillis = 1000)),
-        exit = fadeOut(tween(500)) + scaleOut(targetScale = 0.8f, animationSpec = tween(durationMillis = 500))
+        enter = fadeIn(tween(500)) + scaleIn(
+            initialScale = 0.8f,
+            animationSpec = tween(durationMillis = 1000)
+        ),
+        exit = fadeOut(tween(500)) + scaleOut(
+            targetScale = 0.8f,
+            animationSpec = tween(durationMillis = 500)
+        )
     ) {
         Box(
             modifier = modifier

@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -72,6 +73,7 @@ import kotlin.math.absoluteValue
 @Composable
 fun LazyRowCorousel(
     modifier: Modifier = Modifier,
+    isContentVisible: Boolean = true,
     movies: LazyPagingItems<Movies>?,
     dotsActiveColor: Color = MaterialTheme.colorScheme.primary,
     dotsInActiveColor: Color = Color.LightGray,
@@ -108,50 +110,57 @@ fun LazyRowCorousel(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(
-            modifier = modifier.fillMaxWidth()
+        AnimatedVisibility(
+            visible = isContentVisible,
+            enter = fadeIn(tween(durationMillis = 500)),
+            exit = fadeOut(tween(durationMillis = 500)) + slideOutHorizontally(tween(1000))
         ) {
-            HorizontalPager(
-                state = pagerState,
-                contentPadding = pagerPaddingValues,
-                modifier = modifier
-            ) { page ->
-                baseMovie = movies[pagerState.currentPage]
-                val result = movies[page]
+            Box(
+                modifier = modifier.fillMaxWidth()
+            ) {
+                HorizontalPager(
+                    state = pagerState,
+                    contentPadding = pagerPaddingValues,
+                    modifier = modifier
+                ) { page ->
+                    baseMovie = movies[pagerState.currentPage]
+                    val result = movies[page]
 
-                val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-                val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
-                val transX = with(density) { (pageOffset * 100.dp).toPx() }
-                val zIndex = 1f - pageOffset.absoluteValue
+                    val pageOffset =
+                        (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                    val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
+                    val transX = with(density) { (pageOffset * 100.dp).toPx() }
+                    val zIndex = 1f - pageOffset.absoluteValue
 
-                Box(
-                    modifier = Modifier
-                        .graphicsLayer {
-                            scaleX = scaleFactor
-                            scaleY = scaleFactor
-                            translationX = transX
-                        }
-                        .zIndex(zIndex)
-                        .padding(10.dp)
-                        .shadow(20.dp, spotColor = LightGray)
-                        .clip(RoundedCornerShape(imageCornerRadius))
-                        .clickable { onDetail(result?.id ?: 0) }
-                ) {
-                    val url: String = POSTER_BASE_URL + W185 + result?.poster_path
-
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(url)
-                            .size(Size.ORIGINAL)
-                            .crossfade(true)
-                            .error(R.drawable.no_thumbnail)
-                            .placeholder(R.color.gray)
-                            .build(),
-                        contentDescription = result?.title,
-                        contentScale = ContentScale.Crop,
+                    Box(
                         modifier = Modifier
-                            .height(imageHeight)
-                    )
+                            .graphicsLayer {
+                                scaleX = scaleFactor
+                                scaleY = scaleFactor
+                                translationX = transX
+                            }
+                            .zIndex(zIndex)
+                            .padding(10.dp)
+                            .shadow(20.dp, spotColor = LightGray)
+                            .clip(RoundedCornerShape(imageCornerRadius))
+                            .clickable { onDetail(result?.id ?: 0) }
+                    ) {
+                        val url: String = POSTER_BASE_URL + W185 + result?.poster_path
+
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(url)
+                                .size(Size.ORIGINAL)
+                                .crossfade(true)
+                                .error(R.drawable.no_thumbnail)
+                                .placeholder(R.color.gray)
+                                .build(),
+                            contentDescription = result?.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .height(imageHeight)
+                        )
+                    }
                 }
             }
         }
@@ -159,69 +168,87 @@ fun LazyRowCorousel(
         Spacer(Modifier.height(12.dp))
 
         AnimatedVisibility(
-            visible = isSlide,
-            enter = fadeIn(tween(durationMillis = 500)) + slideInVertically { fullHeight -> fullHeight },
-            exit = fadeOut(tween(durationMillis = 500)) + slideOutVertically { fullHeight -> fullHeight }
+            visible = isContentVisible,
+            enter = fadeIn(tween(durationMillis = 500)) + slideInVertically(tween(1000)),
+            exit = fadeOut(tween(durationMillis = 500)) + slideOutVertically(tween(1000))
         ) {
-            Text(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                text = movie?.title ?: "Empty Title",
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            AnimatedVisibility(
+                visible = isSlide,
+                enter = fadeIn(tween(durationMillis = 500)) + slideInVertically { fullHeight -> fullHeight },
+                exit = fadeOut(tween(durationMillis = 500)) + slideOutVertically { fullHeight -> fullHeight }
+            ) {
+                Text(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    text = movie?.title ?: "Empty Title",
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
 
         Spacer(Modifier.height(12.dp))
 
         AnimatedVisibility(
-            visible = isSlide,
-            enter = fadeIn(tween(durationMillis = 300)) + slideInVertically(),
-            exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically()
+            visible = isContentVisible,
+            enter = fadeIn(tween(durationMillis = 500)) + slideInVertically(tween(1000)) { it },
+            exit = fadeOut(tween(durationMillis = 500)) + slideOutVertically(tween(1000)) { it }
         ) {
-            Text(
-                text = movie?.release_date ?: "Empty Date",
-                style = MaterialTheme.typography.bodySmall
-            )
+            AnimatedVisibility(
+                visible = isSlide,
+                enter = fadeIn(tween(durationMillis = 300)) + slideInVertically(),
+                exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically()
+            ) {
+                Text(
+                    text = movie?.release_date ?: "Empty Date",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
 
         Spacer(Modifier.height(16.dp))
 
-        Row(
-            modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+        AnimatedVisibility(
+            visible = isContentVisible,
+            enter = fadeIn(tween(durationMillis = 500)) + slideInVertically(tween(1000)) { it },
+            exit = fadeOut(tween(durationMillis = 500)) + slideOutVertically(tween(1000)) { it }
         ) {
-            val maxDots = 5
-            val startIndex = (pagerState.currentPage / maxDots) * maxDots
+            Row(
+                modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                val maxDots = 5
+                val startIndex = (pagerState.currentPage / maxDots) * maxDots
 
-            repeat(maxDots) { index ->
-                val actualIndex = startIndex + index
+                repeat(maxDots) { index ->
+                    val actualIndex = startIndex + index
 
-                val size by animateDpAsState(
-                    targetValue = if (pagerState.currentPage == actualIndex) dotsSize * 1.5f else dotsSize,
-                    animationSpec = tween(durationMillis = 300), label = ""
-                )
+                    val size by animateDpAsState(
+                        targetValue = if (pagerState.currentPage == actualIndex) dotsSize * 1.5f else dotsSize,
+                        animationSpec = tween(durationMillis = 300), label = ""
+                    )
 
-                val color by animateColorAsState(
-                    targetValue = if (pagerState.currentPage == actualIndex) dotsActiveColor else dotsInActiveColor,
-                    animationSpec = tween(durationMillis = 300), label = ""
-                )
+                    val color by animateColorAsState(
+                        targetValue = if (pagerState.currentPage == actualIndex) dotsActiveColor else dotsInActiveColor,
+                        animationSpec = tween(durationMillis = 300), label = ""
+                    )
 
-                Box(
-                    modifier = modifier
-                        .padding(2.dp)
-                        .clip(CircleShape)
-                        .size(size)
-                        .background(color)
-                        .clickable {
-                            if (actualIndex < movies.itemCount) {
-                                scope.launch {
-                                    pagerState.animateScrollToPage(actualIndex)
+                    Box(
+                        modifier = modifier
+                            .padding(2.dp)
+                            .clip(CircleShape)
+                            .size(size)
+                            .background(color)
+                            .clickable {
+                                if (actualIndex < movies.itemCount) {
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(actualIndex)
+                                    }
                                 }
                             }
-                        }
-                )
+                    )
+                }
             }
         }
     }
