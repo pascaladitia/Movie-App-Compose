@@ -74,7 +74,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
     viewModel: HomeViewModel = koinInject<HomeViewModel>(),
-    onDetail: (Int) -> Unit
+    onDetail: (Movies) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val movies: LazyPagingItems<Movies> = viewModel.movies.collectAsLazyPagingItems()
@@ -130,7 +130,7 @@ private fun HomeContent(
     movies: LazyPagingItems<Movies>? = null,
     movies2: List<Movies>? = null,
     onCategory: (Int) -> Unit,
-    onDetail: (Int) -> Unit
+    onDetail: (Movies) -> Unit
 ) {
     val coroutine = rememberCoroutineScope()
     var isContentVisible by remember { mutableStateOf(false) }
@@ -279,7 +279,7 @@ fun MovieItemGrid(
     isContentVisible: Boolean = true,
     hasAnimated: Boolean,
     onAnimated: () -> Unit,
-    onDetail: (Int) -> Unit
+    onDetail: (Movies) -> Unit
 ) {
     var isAnimation by remember { mutableStateOf(false) }
     var isPressed by remember { mutableStateOf(false) }
@@ -338,7 +338,7 @@ fun MovieItemGrid(
                             isPressed = true
                             tryAwaitRelease()
                             isPressed = false
-                            onDetail.invoke(item.id)
+                            onDetail.invoke(item)
                         }
                     )
                 },

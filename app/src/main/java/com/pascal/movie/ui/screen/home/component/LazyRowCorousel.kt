@@ -81,7 +81,7 @@ fun LazyRowCorousel(
     pagerPaddingValues: PaddingValues = PaddingValues(horizontal = 65.dp),
     imageCornerRadius: Dp = 16.dp,
     imageHeight: Dp = 350.dp,
-    onDetail: (Int) -> Unit
+    onDetail: (Movies) -> Unit
 ) {
     if (movies == null || movies.itemCount == 0) {
         LazyRowShimmer()
@@ -143,7 +143,7 @@ fun LazyRowCorousel(
                             .padding(10.dp)
                             .shadow(20.dp, spotColor = LightGray)
                             .clip(RoundedCornerShape(imageCornerRadius))
-                            .clickable { onDetail(result?.id ?: 0) }
+                            .clickable { result?.let { onDetail(it) } }
                     ) {
                         val url: String = POSTER_BASE_URL + W185 + result?.poster_path
 

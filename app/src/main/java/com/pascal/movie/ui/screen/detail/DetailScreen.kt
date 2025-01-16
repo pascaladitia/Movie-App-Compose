@@ -62,6 +62,7 @@ import com.pascal.movie.R
 import com.pascal.movie.data.local.entity.FavoritesEntity
 import com.pascal.movie.domain.base.UiState
 import com.pascal.movie.domain.model.mapping.MovieDetailMapping
+import com.pascal.movie.domain.model.movie.Movies
 import com.pascal.movie.domain.model.video.Videos
 import com.pascal.movie.ui.theme.MovieTheme
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
@@ -79,7 +80,7 @@ import org.koin.androidx.compose.koinViewModel
 fun DetailScreen(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
-    id: String = "",
+    movies: Movies? = null,
     viewModel: DetailViewModel = koinViewModel(),
     onNavBack: () -> Unit
 ) {
@@ -91,7 +92,7 @@ fun DetailScreen(
 
     LaunchedEffect(Unit) {
         isContentVisible = true
-        viewModel.loadDetailMovie(id.toInt())
+        viewModel.loadDetailMovie(movies)
     }
 
     Surface(

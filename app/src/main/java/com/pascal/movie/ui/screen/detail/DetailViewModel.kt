@@ -6,6 +6,7 @@ import com.pascal.movie.data.local.repository.LocalRepository
 import com.pascal.movie.data.repository.Repository
 import com.pascal.movie.domain.base.UiState
 import com.pascal.movie.domain.model.mapping.MovieDetailMapping
+import com.pascal.movie.domain.model.movie.Movies
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -17,12 +18,11 @@ class DetailViewModel(
     private val _movieDetailUiState = MutableStateFlow<UiState<MovieDetailMapping?>>(UiState.Loading)
     val movieDetailUiState: StateFlow<UiState<MovieDetailMapping?>> = _movieDetailUiState
 
-    suspend fun loadDetailMovie(id: Int) {
+    suspend fun loadDetailMovie(movie: Movies?) {
         try {
-            val movie = repository.getSingleMovie(id)
-            val videos = repository.getMovieVideos(id)
-            val reviews = repository.getMovieReviews(id)
-            val favorite = database.getFavoriteMovie(id)
+            val videos = repository.getMovieVideos(movie?.id ?: 0)
+            val reviews = repository.getMovieReviews(movie?.id ?: 0)
+            val favorite = database.getFavoriteMovie(movie?.id ?: 0)
 
             val mapping = MovieDetailMapping(
                 reviews.results,
