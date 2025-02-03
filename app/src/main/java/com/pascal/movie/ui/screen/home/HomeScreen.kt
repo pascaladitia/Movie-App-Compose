@@ -37,7 +37,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,16 +50,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
 import com.pascal.movie.R
-import com.pascal.movie.domain.base.UiState
 import com.pascal.movie.domain.model.movie.Movies
+import com.pascal.movie.ui.component.dialog.ShowDialog
 import com.pascal.movie.ui.screen.home.component.LazyRowCorousel
 import com.pascal.movie.ui.theme.MovieTheme
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
@@ -77,10 +78,9 @@ fun HomeScreen(
     onDetail: (Movies) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val movies: LazyPagingItems<Movies> = viewModel.movies.collectAsLazyPagingItems()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val moviesState by viewModel.movies2.collectAsState()
-    var movies2 by remember { mutableStateOf<List<Movies>>(emptyList()) }
+    val movies: LazyPagingItems<Movies> = viewModel.movies.collectAsLazyPagingItems()
 
     LaunchedEffect(Unit) {
         viewModel.loadMovies(1)
@@ -94,33 +94,27 @@ fun HomeScreen(
         modifier = modifier.padding(paddingValues),
         color = MaterialTheme.colorScheme.background
     ) {
-        HomeContent(
-            movies = movies,
-            movies2 = movies2,
-            onCategory = {
-                coroutineScope.launch {
-                    viewModel.loadMovies(it)
-                }
-            },
-            onDetail = {
-                onDetail(it)
-            }
-        )
-    }
-
-    LaunchedEffect(moviesState) {
-        when (moviesState) {
-            is UiState.Empty -> {}
-            is UiState.Loading -> {}
-            is UiState.Error -> {
-                val errorState = moviesState as UiState.Error
-            }
-
-            is UiState.Success -> {
-                val data = (moviesState as UiState.Success).data
-                movies2 = data
+        if (uiState.isError) {
+            ShowDialog(
+                message = uiState.message,
+                textButton = stringResource(R.string.close)
+            ) {
+                viewModel.setError(false)
             }
         }
+
+        HomeContent(
+            movies = movies,
+            movies2 = uiState.movies2,
+            uiEvent = HomeUIEvent(
+                onCategory = {
+                    coroutineScope.launch {
+                        viewModel.loadMovies(it)
+                    }
+                },
+                onDetail = onDetail,
+            )
+        )
     }
 }
 
@@ -129,8 +123,7 @@ private fun HomeContent(
     modifier: Modifier = Modifier,
     movies: LazyPagingItems<Movies>? = null,
     movies2: List<Movies>? = null,
-    onCategory: (Int) -> Unit,
-    onDetail: (Movies) -> Unit
+    uiEvent: HomeUIEvent
 ) {
     val coroutine = rememberCoroutineScope()
     var isContentVisible by remember { mutableStateOf(false) }
@@ -177,7 +170,7 @@ private fun HomeContent(
                                 .align(Alignment.Center)
                                 .clickable {
                                     coroutineScope.launch {
-                                        onCategory(index.plus(1))
+                                        uiEvent.onCategory(index.plus(1))
                                         pagerState.animateScrollToPage(index)
                                     }
                                 },
@@ -205,7 +198,7 @@ private fun HomeContent(
                 coroutine.launch {
                     isContentVisible = false
                     delay(1000)
-                    onDetail(it)
+                    uiEvent.onDetail(it)
                 }
             }
         }
@@ -260,7 +253,7 @@ private fun HomeContent(
                         coroutine.launch {
                             isContentVisible = false
                             delay(1000)
-                            onDetail(it)
+                            uiEvent.onDetail(it)
                         }
                     }
                 )
@@ -366,8 +359,7 @@ private fun HomePreview() {
     MovieTheme {
         HomeContent(
             movies = null,
-            onCategory = {},
-            onDetail = {}
+            uiEvent = HomeUIEvent()
         )
     }
 }
