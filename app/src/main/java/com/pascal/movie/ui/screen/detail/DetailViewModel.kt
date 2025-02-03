@@ -4,36 +4,49 @@ import androidx.lifecycle.ViewModel
 import com.pascal.movie.data.local.entity.FavoritesEntity
 import com.pascal.movie.data.local.repository.LocalRepository
 import com.pascal.movie.data.repository.Repository
-import com.pascal.movie.domain.base.UiState
 import com.pascal.movie.domain.model.mapping.MovieDetailMapping
 import com.pascal.movie.domain.model.movie.Movies
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 class DetailViewModel(
     private val repository: Repository,
     private val database: LocalRepository
 ) : ViewModel() {
 
-    private val _movieDetailUiState = MutableStateFlow<UiState<MovieDetailMapping?>>(UiState.Loading)
-    val movieDetailUiState: StateFlow<UiState<MovieDetailMapping?>> = _movieDetailUiState
+    private val _uiState = MutableStateFlow(DetailUIState())
+    val uiState get() = _uiState.asStateFlow()
 
     suspend fun loadDetailMovie(movie: Movies?) {
+        _uiState.update { it.copy(isLoading = true) }
+
         try {
             val videos = repository.getMovieVideos(movie?.id ?: 0)
-            val reviews = repository.getMovieReviews(movie?.id ?: 0)
             val favorite = database.getFavoriteMovie(movie?.id ?: 0)
+//            val reviews = repository.getMovieReviews(movie?.id ?: 0)
 
             val mapping = MovieDetailMapping(
-                reviews.results,
+                null,
                 videos.results,
                 movie,
                 favorite
             )
 
-            _movieDetailUiState.value = UiState.Success(mapping)
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    movies = mapping
+                )
+            }
         } catch (e: Exception) {
-            _movieDetailUiState.value = UiState.Error(e.message.toString())
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isError = true,
+                    message = e.message.toString(),
+                )
+            }
         }
     }
 
@@ -43,5 +56,13 @@ class DetailViewModel(
         } else {
             database.deleteFavoriteItem(item)
         }
+    }
+
+    fun setLoading(boolean: Boolean) {
+        _uiState.update { it.copy(isLoading = boolean) }
+    }
+
+    fun setError(boolean: Boolean) {
+        _uiState.update { it.copy(isError = boolean) }
     }
 }

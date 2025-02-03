@@ -37,7 +37,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,20 +50,23 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
 import com.pascal.movie.R
 import com.pascal.movie.data.local.entity.FavoritesEntity
-import com.pascal.movie.domain.base.UiState
 import com.pascal.movie.domain.model.mapping.MovieDetailMapping
 import com.pascal.movie.domain.model.movie.Movies
 import com.pascal.movie.domain.model.video.Videos
+import com.pascal.movie.ui.component.dialog.ShowDialog
+import com.pascal.movie.ui.screen.detail.component.DetailShimmerAnimation
 import com.pascal.movie.ui.theme.MovieTheme
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
@@ -87,9 +89,7 @@ fun DetailScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
     var isContentVisible by remember { mutableStateOf(false) }
-
-    val moviesDetailState by viewModel.movieDetailUiState.collectAsState()
-    var moviesDetail by remember { mutableStateOf<MovieDetailMapping?>(null) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         isContentVisible = true
@@ -100,34 +100,30 @@ fun DetailScreen(
         modifier = modifier.padding(paddingValues),
         color = MaterialTheme.colorScheme.background
     ) {
-        if (moviesDetail != null) {
+        if (uiState.isError) {
+            ShowDialog(
+                message = uiState.message,
+                textButton = stringResource(R.string.close)
+            ) {
+                viewModel.setError(false)
+            }
+        }
+
+        if (uiState.isLoading) {
+            DetailShimmerAnimation()
+        } else {
             DetailContent(
                 isContentVisible = isContentVisible,
-                item = moviesDetail,
-                onFavorite = { item, isFav ->
-                    coroutineScope.launch {
-                        viewModel.updateFavMovie(item, isFav)
-                    }
-                },
-                onNavBack = {
-                    onNavBack()
-                }
+                item = uiState.movies,
+                uiEvent = DetailUIEvent(
+                    onFavorite = { item, isFav ->
+                        coroutineScope.launch {
+                            viewModel.updateFavMovie(item, isFav)
+                        }
+                    },
+                    onNavBack = onNavBack
+                )
             )
-        }
-    }
-
-    LaunchedEffect(moviesDetailState) {
-        when (moviesDetailState) {
-            is UiState.Empty -> {}
-            is UiState.Loading -> {}
-            is UiState.Error -> {
-                val errorState = moviesDetailState as UiState.Error
-            }
-
-            is UiState.Success -> {
-                val data = (moviesDetailState as UiState.Success).data
-                moviesDetail = data
-            }
         }
     }
 }
@@ -137,8 +133,7 @@ fun DetailContent(
     modifier: Modifier = Modifier,
     isContentVisible: Boolean = true,
     item: MovieDetailMapping? = null,
-    onFavorite: (FavoritesEntity, Boolean) -> Unit,
-    onNavBack: () -> Unit
+    uiEvent: DetailUIEvent
 ) {
     var hasAnimated by remember { mutableStateOf(false) }
     var favBtnClicked by rememberSaveable {
@@ -146,16 +141,6 @@ fun DetailContent(
     }
 
     val url: String = POSTER_BASE_URL + W185 + item?.movies?.poster_path
-    val context = LocalContext.current
-    val model = remember {
-        ImageRequest.Builder(context)
-            .data(url)
-            .size(Size.ORIGINAL)
-            .crossfade(true)
-            .error(R.drawable.no_thumbnail)
-            .placeholder(R.color.gray)
-            .build()
-    }
 
     Column(
         modifier = modifier
@@ -174,7 +159,7 @@ fun DetailContent(
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
-                    .clickable { onNavBack() },
+                    .clickable { uiEvent.onNavBack() },
                 imageVector = FeatherIcons.ChevronLeft,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.tertiary
@@ -186,7 +171,7 @@ fun DetailContent(
                     .clip(CircleShape)
                     .clickable {
                         favBtnClicked = !favBtnClicked
-                        onFavorite(
+                        uiEvent.onFavorite(
                             FavoritesEntity(
                                 item?.movies?.id ?: 0,
                                 item?.movies?.poster_path ?: ""
@@ -356,7 +341,7 @@ fun DetailContentItem(
 @Composable
 fun DetailTrailerItem(
     modifier: Modifier = Modifier,
-    item: Videos,
+    item: Videos? = null,
     index: Int,
     isContentVisible: Boolean = true,
     hasAnimated: Boolean,
@@ -385,7 +370,7 @@ fun DetailTrailerItem(
         }
     }
 
-    val urlThumbnail = YOUTUBE_TN_URL + item.key + "/hqdefault.jpg"
+    val urlThumbnail = YOUTUBE_TN_URL + item?.key + "/hqdefault.jpg"
     val context = LocalContext.current
     val model = remember {
         ImageRequest.Builder(context)
@@ -420,7 +405,7 @@ fun DetailTrailerItem(
                             tryAwaitRelease()
                             isPressed = false
 
-                            val trailerUrl = YOUTUBE_TRAILERS_URL + item.key
+                            val trailerUrl = YOUTUBE_TRAILERS_URL + item?.key
                             intentActionView(context, trailerUrl)
                         }
                     )
@@ -448,7 +433,7 @@ fun DetailTrailerItem(
 private fun DetailPreview() {
     MovieTheme {
         DetailContent(
-            onFavorite = { item, isFav -> }
-        ) { }
+            uiEvent = DetailUIEvent()
+        )
     }
 }
