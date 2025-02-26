@@ -28,6 +28,7 @@ fun showToast(context: Context, msg: String) {
     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
 }
 
+// Test
 fun getCurrentFormattedDate(): String {
     val currentDate = Calendar.getInstance().time
     val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.getDefault())
