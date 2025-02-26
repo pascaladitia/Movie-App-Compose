@@ -7,6 +7,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.pascal.movie.ui.theme.Neutral500
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.Home
 import compose.icons.feathericons.Info
@@ -30,7 +32,7 @@ fun BottomBar(
 ) {
     Box(
         modifier = modifier
-            .background(Color.White)
+            .background(Neutral500)
     ) {
         NavigationBar(
             containerColor = Color.Transparent,
@@ -44,14 +46,9 @@ fun BottomBar(
                     screen = Screen.HomeScreen
                 ),
                 NavigationItem(
-                    title = "Team",
-                    icon = FeatherIcons.Info,
-                    screen = Screen.TeamScreen
-                ),
-                NavigationItem(
-                    title = "Live",
+                    title = "Favorite",
                     icon = FeatherIcons.Video,
-                    screen = Screen.LiveScreen
+                    screen = Screen.FavoriteScreen
                 ),
                 NavigationItem(
                     title = "Profile",
@@ -62,7 +59,7 @@ fun BottomBar(
             navigationItems.map { item ->
                 NavigationBarItem(
                     icon = {
-                        val iconSize = if (currentRoute == item.screen.route) 28.dp else 24.dp
+                        val iconSize = if (currentRoute == item.screen.route) 26.dp else 24.dp
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.title,
@@ -82,6 +79,10 @@ fun BottomBar(
                         }
 
                     },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(0.1f)
+                    ),
                     alwaysShowLabel = false,
                     selected = currentRoute == item.screen.route,
                     onClick = {

@@ -38,24 +38,24 @@ android {
 
     productFlavors {
         create("dev") {
-            baseUrl = "sample_url"
-            apiKey = "api-key"
+            baseUrl = "https://api.themoviedb.org"
+            apiKey = "5dcbb8c388ece52afe59358591957a24"
             dimension = "environment"
             buildConfigField("String", "API_KEY", "\"" + apiKey + "\"")
             buildConfigField("String", "BASE_URL", "\"" + baseUrl + "\"")
         }
 
         create("staging") {
-            baseUrl = "sample_url"
-            apiKey = "api-key"
+            baseUrl = "https://api.themoviedb.org"
+            apiKey = "5dcbb8c388ece52afe59358591957a24"
             dimension = "environment"
             buildConfigField("String", "API_KEY", "\"" + apiKey + "\"")
             buildConfigField("String", "BASE_URL", "\"" + baseUrl + "\"")
         }
 
         create("prod") {
-            baseUrl = "sample_url"
-            apiKey = "api-key"
+            baseUrl = "https://api.themoviedb.org"
+            apiKey = "5dcbb8c388ece52afe59358591957a24"
             dimension = "environment"
             buildConfigField("String", "API_KEY", "\"" + apiKey + "\"")
             buildConfigField("String", "BASE_URL", "\"" + baseUrl + "\"")

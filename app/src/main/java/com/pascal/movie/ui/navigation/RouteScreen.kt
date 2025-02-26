@@ -3,16 +3,20 @@ package com.pascal.movie.ui.navigation
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.pascal.movie.domain.model.movie.Movies
+import com.pascal.movie.ui.screen.detail.DetailScreen
+import com.pascal.movie.ui.screen.favorite.FavoriteScreen
 import com.pascal.movie.ui.screen.home.HomeScreen
-import com.pascal.movie.ui.screen.live.LiveScreen
 import com.pascal.movie.ui.screen.profile.ProfileScreen
 import com.pascal.movie.ui.screen.splash.SplashScreen
-import com.pascal.movie.ui.screen.teams.TeamScreen
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @Composable
 fun RouteScreen(
@@ -25,8 +29,7 @@ fun RouteScreen(
         bottomBar = {
             if (currentRoute in listOf(
                     Screen.HomeScreen.route,
-                    Screen.TeamScreen.route,
-                    Screen.LiveScreen.route,
+                    Screen.FavoriteScreen.route,
                     Screen.ProfileScreen.route
                 )) {
                 BottomBar(navController)
@@ -53,23 +56,25 @@ fun RouteScreen(
                 HomeScreen(
                     paddingValues = paddingValues,
                     onDetail = {
-                        navController.popBackStack()
+                        saveToCurrentBackStack(navController, "movies", it)
+                        navController.navigate(Screen.DetailScreen.route)
                     }
                 )
             }
-            composable(route = Screen.TeamScreen.route) {
-                TeamScreen(
+            composable(route = Screen.FavoriteScreen.route) {
+                FavoriteScreen(
                     paddingValues = paddingValues,
                     onDetail = {
                         navController.popBackStack()
                     }
                 )
             }
-            composable(route = Screen.LiveScreen.route) {
-                LiveScreen(
+            composable(route = Screen.DetailScreen.route) {
+                DetailScreen(
                     paddingValues = paddingValues,
-                    onDetail = {
-                        navController.popBackStack()
+                    movies = getFromPreviousBackStack(navController, "movies"),
+                    onNavBack = {
+                        navController.navigateUp()
                     }
                 )
             }
@@ -77,10 +82,27 @@ fun RouteScreen(
                 ProfileScreen(
                     paddingValues = paddingValues,
                     onDetail = {
-                        navController.popBackStack()
+
                     }
                 )
             }
         }
     }
+}
+
+inline fun <reified T> saveToCurrentBackStack(
+    navController: NavController,
+    key: String,
+    data: T
+) {
+    val json = Json.encodeToString(data)
+    navController.currentBackStackEntry?.savedStateHandle?.set(key, json)
+}
+
+inline fun <reified T> getFromPreviousBackStack(
+    navController: NavController,
+    key: String
+): T? {
+    val json = navController.previousBackStackEntry?.savedStateHandle?.get<String>(key)
+    return json?.let { Json.decodeFromString(it) }
 }

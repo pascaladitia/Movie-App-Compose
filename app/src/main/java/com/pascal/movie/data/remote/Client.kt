@@ -1,6 +1,7 @@
 package com.pascal.movie.data.remote
 
 import android.util.Log
+import com.pascal.movie.BuildConfig
 import com.pascal.movie.utils.Constant.TIMEOUT
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout

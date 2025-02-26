@@ -47,7 +47,7 @@ fun ShowDialog(
             modifier = modifier
                 .shadow(6.dp, RoundedCornerShape(16.dp))
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color.White, RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
             Text(

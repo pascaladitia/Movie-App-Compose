@@ -11,6 +11,7 @@ import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.pascal.movie.utils.Constant.FORMAT_DATE
+import com.pascal.movie.utils.Constant.YOUTUBE_TRAILERS_URL
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -59,44 +60,8 @@ fun reFormatDate(date: String?): Pair<String?, String?> {
 }
 
 fun intentActionView(context: Context, url: String) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-    ContextCompat.startActivity(context, intent, null)
-}
-
-fun JSONObject.toRequestBody(): RequestBody {
-    return this.toString().toRequestBody("application/json".toMediaTypeOrNull())
-}
-
-@SuppressLint("SimpleDateFormat")
-fun Context.createImageFile(): File {
-    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-    val imageFileName = "JPEG_" + timeStamp + "_"
-    val image = File.createTempFile(
-        imageFileName,
-        ".jpg",
-        externalCacheDir
-    )
-    return image
-}
-
-fun Uri.toFile(context: Context): File? {
-    return try {
-        val contentResolver = context.contentResolver
-        val fileName = "${System.currentTimeMillis()}." + getFileExtension(contentResolver)
-
-        val file = File(context.cacheDir, fileName)
-
-        contentResolver.openInputStream(this)?.use { input ->
-            FileOutputStream(file).use { output ->
-                input.copyTo(output)
-            }
-        }
-
-        file
-    } catch (e: IOException) {
-        e.printStackTrace()
-        null
-    }
+    val i = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    ContextCompat.startActivity(context, i, null)
 }
 
 @Throws(IOException::class)
