@@ -24,6 +24,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+// Testing
 fun showToast(context: Context, msg: String) {
     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
 }
@@ -35,6 +36,7 @@ fun getCurrentFormattedDate(): String {
     return dateFormat.format(currentDate)
 }
 
+// Testing
 fun reFormatDate(date: String?): Pair<String?, String?> {
     if (date.isNullOrBlank()) {
         return Pair("", "")
