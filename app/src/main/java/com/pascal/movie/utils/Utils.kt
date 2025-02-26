@@ -62,6 +62,7 @@ fun reFormatDate(date: String?): Pair<String?, String?> {
     return Pair("", "")
 }
 
+// Testing
 fun intentActionView(context: Context, url: String) {
     val i = Intent(Intent.ACTION_VIEW, Uri.parse(url))
     ContextCompat.startActivity(context, i, null)
