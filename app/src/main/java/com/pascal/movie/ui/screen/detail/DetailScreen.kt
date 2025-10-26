@@ -36,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +68,7 @@ import com.pascal.movie.domain.model.MovieDetailMapping
 import com.pascal.movie.domain.model.Video
 import com.pascal.movie.ui.component.dialog.ShowDialog
 import com.pascal.movie.ui.screen.detail.component.DetailShimmerAnimation
+import com.pascal.movie.ui.screen.detail.state.LocalDetailEvent
 import com.pascal.movie.ui.theme.MovieTheme
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
@@ -87,6 +89,7 @@ fun DetailScreen(
     viewModel: DetailViewModel = koinViewModel(),
     onNavBack: () -> Unit
 ) {
+    val event = LocalDetailEvent.current
     val coroutineScope = rememberCoroutineScope()
     var isContentVisible by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -96,34 +99,38 @@ fun DetailScreen(
         viewModel.loadDetailMovie(moviesResponse)
     }
 
-    Surface(
-        modifier = modifier.padding(paddingValues),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        if (uiState.isError) {
-            ShowDialog(
-                message = uiState.message,
-                textButton = stringResource(R.string.close)
-            ) {
-                viewModel.setError(false)
-            }
+    if (uiState.isError) {
+        ShowDialog(
+            message = uiState.message,
+            textButton = stringResource(R.string.close)
+        ) {
+            viewModel.setError(false)
         }
+    }
 
-        if (uiState.isLoading) {
-            DetailShimmerAnimation()
-        } else {
-            DetailContent(
-                isContentVisible = isContentVisible,
-                item = uiState.movies,
-                uiEvent = DetailUIEvent(
-                    onFavorite = { item, isFav ->
-                        coroutineScope.launch {
-                            viewModel.updateFavMovie(item, isFav)
-                        }
-                    },
-                    onNavBack = onNavBack
+
+    CompositionLocalProvider(
+        LocalDetailEvent provides event.copy(
+            onFavorite = { item, isFav ->
+                coroutineScope.launch {
+                    viewModel.updateFavMovie(item, isFav)
+                }
+            },
+            onNavBack = onNavBack
+        )
+    ) {
+        Surface(
+            modifier = modifier.padding(paddingValues),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            if (uiState.isLoading) {
+                DetailShimmerAnimation()
+            } else {
+                DetailContent(
+                    isContentVisible = isContentVisible,
+                    item = uiState.movies
                 )
-            )
+            }
         }
     }
 }
@@ -133,8 +140,8 @@ fun DetailContent(
     modifier: Modifier = Modifier,
     isContentVisible: Boolean = true,
     item: MovieDetailMapping? = null,
-    uiEvent: DetailUIEvent
 ) {
+    val event = LocalDetailEvent.current
     var hasAnimated by remember { mutableStateOf(false) }
     var favBtnClicked by rememberSaveable {
         mutableStateOf(item?.favorite ?: false)
@@ -159,7 +166,7 @@ fun DetailContent(
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
-                    .clickable { uiEvent.onNavBack() },
+                    .clickable { event.onNavBack() },
                 imageVector = FeatherIcons.ChevronLeft,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.tertiary
@@ -171,7 +178,7 @@ fun DetailContent(
                     .clip(CircleShape)
                     .clickable {
                         favBtnClicked = !favBtnClicked
-                        uiEvent.onFavorite(
+                        event.onFavorite(
                             FavoritesEntity(
                                 item?.movie?.id ?: 0,
                                 item?.movie?.posterPath ?: ""
@@ -433,8 +440,6 @@ fun DetailTrailerItem(
 @Composable
 private fun DetailPreview() {
     MovieTheme {
-        DetailContent(
-            uiEvent = DetailUIEvent()
-        )
+        DetailContent()
     }
 }

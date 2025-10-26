@@ -7,6 +7,7 @@ import com.pascal.movie.data.local.repository.LocalRepositoryImpl
 import com.pascal.movie.domain.model.Movie
 import com.pascal.movie.domain.model.MovieDetailMapping
 import com.pascal.movie.domain.usecase.movie.MovieUseCase
+import com.pascal.movie.ui.screen.detail.state.DetailUIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
