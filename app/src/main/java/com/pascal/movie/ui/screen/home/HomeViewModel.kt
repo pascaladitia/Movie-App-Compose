@@ -4,72 +4,71 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.pascal.movie.data.local.repository.LocalRepository
-import com.pascal.movie.data.repository.Repository
-import com.pascal.movie.domain.model.movie.Movies
+import com.pascal.movie.data.local.repository.LocalRepositoryImpl
+import com.pascal.movie.domain.model.Movie
+import com.pascal.movie.domain.usecase.movie.MovieUseCase
+import com.pascal.movie.ui.screen.home.state.HomeUIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
 @KoinViewModel
 class HomeViewModel(
-    private val repository: Repository,
-    private val database: LocalRepository
+    private val movieUseCase: MovieUseCase,
+    private val localUseCase: LocalRepositoryImpl
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUIState())
-    val uiState get() = _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
 
-    private val _movies = MutableStateFlow(PagingData.empty<Movies>())
-    val movies: StateFlow<PagingData<Movies>> = _movies
+    private val _moviesResponse = MutableStateFlow(PagingData.empty<Movie>())
+    val moviesResponse: StateFlow<PagingData<Movie>> = _moviesResponse
 
-    suspend fun loadMovies(selection: Int) {
-        _uiState.update {
-            it.copy(isLoading = true)
-        }
-
-        repository.getMovies(selection)
-            .cachedIn(viewModelScope)
-            .collect {
-                _movies.value = it
-            }
-    }
-
-    suspend fun loadMovies2() {
-        _uiState.update {
-            it.copy(isLoading = true)
-        }
-
-        try {
-            val result = repository.getMoviesCatalog(1)
-
-            if (result.isNotEmpty()) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        movies2 = result
-                    )
+    fun loadMovies(selection: MovieTab) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            movieUseCase.getMovies(selection)
+                .cachedIn(viewModelScope)
+                .collectLatest { pagingData ->
+                    _moviesResponse.value = pagingData
+                    _uiState.update { it.copy(isLoading = false) }
                 }
-            }
-        } catch (e: Exception) {
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    isError = true,
-                    message = e.message.toString()
-                )
-            }
         }
     }
 
-    fun setLoading(boolean: Boolean) {
-        _uiState.update { it.copy(isLoading = boolean) }
+    fun loadMoviesCatalog(page: Int = 1) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            movieUseCase.getMoviesCatalog(page)
+                .collectLatest { result ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            moviesResponse2 = result
+                        )
+                    }
+                }
+        }
     }
 
-    fun setError(boolean: Boolean) {
-        _uiState.update { it.copy(isError = boolean) }
+    fun setLoading(value: Boolean) {
+        _uiState.update { it.copy(isLoading = value) }
+    }
+
+    fun setError(value: Boolean) {
+        _uiState.update { it.copy(isError = value) }
     }
 }
 
+enum class MovieTab(val title: String) {
+    TRENDING("Trending"),
+    TOP_RATED("Top Rated"),
+    NOW_PLAYING("Now Playing"),
+    UPCOMING("Upcoming"),
+    TV_SHOWS("TV Shows"),
+    FAVORITES("Favorites");
+}

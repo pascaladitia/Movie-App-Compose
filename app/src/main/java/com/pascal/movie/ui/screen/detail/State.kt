@@ -1,7 +1,7 @@
 package com.pascal.movie.ui.screen.detail
 
 import com.pascal.movie.data.local.entity.FavoritesEntity
-import com.pascal.movie.domain.model.mapping.MovieDetailMapping
+import com.pascal.movie.domain.model.MovieDetailMapping
 
 data class DetailUIState(
     val isLoading: Boolean = false,

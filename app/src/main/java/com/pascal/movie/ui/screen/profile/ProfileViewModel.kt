@@ -1,12 +1,12 @@
 package com.pascal.movie.ui.screen.profile
 
 import androidx.lifecycle.ViewModel
-import com.pascal.movie.data.local.repository.LocalRepository
-import com.pascal.movie.data.repository.Repository
+import com.pascal.movie.data.local.repository.LocalRepositoryImpl
+import com.pascal.movie.data.repository.MovieRepositoryImpl
 
 class ProfileViewModel(
-    private val repository: Repository,
-    private val database: LocalRepository
+    private val repositoryImpl: MovieRepositoryImpl,
+    private val database: LocalRepositoryImpl
 ) : ViewModel() {
 
 

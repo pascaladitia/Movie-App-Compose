@@ -9,7 +9,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.pascal.movie.domain.model.movie.Movies
 import com.pascal.movie.ui.screen.detail.DetailScreen
 import com.pascal.movie.ui.screen.favorite.FavoriteScreen
 import com.pascal.movie.ui.screen.home.HomeScreen
@@ -72,7 +71,7 @@ fun RouteScreen(
             composable(route = Screen.DetailScreen.route) {
                 DetailScreen(
                     paddingValues = paddingValues,
-                    movies = getFromPreviousBackStack(navController, "movies"),
+                    moviesResponse = getFromPreviousBackStack(navController, "movies"),
                     onNavBack = {
                         navController.navigateUp()
                     }

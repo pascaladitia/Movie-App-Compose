@@ -62,9 +62,9 @@ import coil.request.ImageRequest
 import coil.size.Size
 import com.pascal.movie.R
 import com.pascal.movie.data.local.entity.FavoritesEntity
-import com.pascal.movie.domain.model.mapping.MovieDetailMapping
-import com.pascal.movie.domain.model.movie.Movies
-import com.pascal.movie.domain.model.video.Videos
+import com.pascal.movie.domain.model.Movie
+import com.pascal.movie.domain.model.MovieDetailMapping
+import com.pascal.movie.domain.model.Video
 import com.pascal.movie.ui.component.dialog.ShowDialog
 import com.pascal.movie.ui.screen.detail.component.DetailShimmerAnimation
 import com.pascal.movie.ui.theme.MovieTheme
@@ -83,7 +83,7 @@ import org.koin.androidx.compose.koinViewModel
 fun DetailScreen(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
-    movies: Movies? = null,
+    moviesResponse: Movie? = null,
     viewModel: DetailViewModel = koinViewModel(),
     onNavBack: () -> Unit
 ) {
@@ -93,7 +93,7 @@ fun DetailScreen(
 
     LaunchedEffect(Unit) {
         isContentVisible = true
-        viewModel.loadDetailMovie(movies)
+        viewModel.loadDetailMovie(moviesResponse)
     }
 
     Surface(
@@ -140,7 +140,7 @@ fun DetailContent(
         mutableStateOf(item?.favorite ?: false)
     }
 
-    val url: String = POSTER_BASE_URL + W185 + item?.movies?.poster_path
+    val url: String = POSTER_BASE_URL + W185 + item?.movie?.posterPath
 
     Column(
         modifier = modifier
@@ -173,8 +173,8 @@ fun DetailContent(
                         favBtnClicked = !favBtnClicked
                         uiEvent.onFavorite(
                             FavoritesEntity(
-                                item?.movies?.id ?: 0,
-                                item?.movies?.poster_path ?: ""
+                                item?.movie?.id ?: 0,
+                                item?.movie?.posterPath ?: ""
                             ),
                             favBtnClicked
                         )
@@ -209,7 +209,7 @@ fun DetailContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            text = item?.movies?.title ?: "Empty Title",
+            text = item?.movie?.title ?: "Empty Title",
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
             maxLines = 1,
@@ -219,7 +219,7 @@ fun DetailContent(
         Spacer(Modifier.height(12.dp))
 
         Text(
-            text = item?.movies?.release_date ?: "Empty Date",
+            text = item?.movie?.releaseDate ?: "Empty Date",
             style = MaterialTheme.typography.bodySmall
         )
 
@@ -234,19 +234,19 @@ fun DetailContent(
             DetailContentItem(
                 modifier = Modifier.weight(1f),
                 title = "popularity",
-                value = "${item?.movies?.popularity ?: 0}"
+                value = "${item?.movie?.popularity ?: 0}"
             )
 
             DetailContentItem(
                 modifier = Modifier.weight(1f),
                 title = "Language",
-                value = item?.movies?.original_language ?: "En"
+                value = item?.movie?.originalLanguage ?: "En"
             )
 
             DetailContentItem(
                 modifier = Modifier.weight(1f),
                 title = "vote",
-                value = "${item?.movies?.vote_count ?: 0}"
+                value = "${item?.movie?.voteCount ?: 0}"
             )
         }
 
@@ -256,7 +256,7 @@ fun DetailContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            text = item?.movies?.overview ?: "No Description",
+            text = item?.movie?.overview ?: "No Description",
             style = MaterialTheme.typography.bodySmall
         )
 
@@ -341,7 +341,7 @@ fun DetailContentItem(
 @Composable
 fun DetailTrailerItem(
     modifier: Modifier = Modifier,
-    item: Videos? = null,
+    item: Video? = null,
     index: Int,
     isContentVisible: Boolean = true,
     hasAnimated: Boolean,
@@ -404,7 +404,8 @@ fun DetailTrailerItem(
                             isPressed = true
                             tryAwaitRelease()
                             isPressed = false
-
+                        },
+                        onLongPress = {
                             val trailerUrl = YOUTUBE_TRAILERS_URL + item?.key
                             intentActionView(context, trailerUrl)
                         }

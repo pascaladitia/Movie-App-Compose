@@ -1,10 +1,10 @@
-package com.pascal.movie.domain.model.dashboard
+package com.pascal.movie.data.remote.dtos.dashboard
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ResponseDashboard(
+data class DashboardResponse(
 
 	@SerialName("code")
 	val code: Int? = null,

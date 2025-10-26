@@ -36,6 +36,7 @@ import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,9 +61,10 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
 import com.pascal.movie.R
-import com.pascal.movie.domain.model.movie.Movies
+import com.pascal.movie.domain.model.Movie
 import com.pascal.movie.ui.component.dialog.ShowDialog
-import com.pascal.movie.ui.screen.home.component.LazyRowCorousel
+import com.pascal.movie.ui.screen.home.component.LazyRowCarousel
+import com.pascal.movie.ui.screen.home.state.LocalHomeEvent
 import com.pascal.movie.ui.theme.MovieTheme
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
@@ -75,56 +77,56 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
     viewModel: HomeViewModel = koinInject<HomeViewModel>(),
-    onDetail: (Movies) -> Unit
+    onDetail: (Movie) -> Unit
 ) {
+    val event = LocalHomeEvent.current
     val coroutineScope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    val movies: LazyPagingItems<Movies> = viewModel.movies.collectAsLazyPagingItems()
-
-    LaunchedEffect(Unit) {
-        viewModel.loadMovies(1)
-    }
+    val moviesResponse: LazyPagingItems<Movie> = viewModel.moviesResponse.collectAsLazyPagingItems()
 
     LaunchedEffect(Unit) {
-        viewModel.loadMovies2()
+        viewModel.loadMovies(MovieTab.TRENDING)
+        viewModel.loadMoviesCatalog()
     }
 
-    Surface(
-        modifier = modifier.padding(paddingValues),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        if (uiState.isError) {
-            ShowDialog(
-                message = uiState.message,
-                textButton = stringResource(R.string.close)
-            ) {
-                viewModel.setError(false)
-            }
+    if (uiState.isError) {
+        ShowDialog(
+            message = uiState.message,
+            textButton = stringResource(R.string.close)
+        ) {
+            viewModel.setError(false)
         }
+    }
 
-        HomeContent(
-            movies = movies,
-            movies2 = uiState.movies2,
-            uiEvent = HomeUIEvent(
-                onCategory = {
-                    coroutineScope.launch {
-                        viewModel.loadMovies(it)
-                    }
-                },
-                onDetail = onDetail,
-            )
+    CompositionLocalProvider(
+        LocalHomeEvent provides event.copy(
+            onCategory = {
+                coroutineScope.launch {
+                    viewModel.loadMovies(it)
+                }
+            },
+            onDetail = onDetail
         )
+    ) {
+        Surface(
+            modifier = modifier.padding(paddingValues),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            HomeContent(
+                moviesResponse = moviesResponse,
+                moviesResponse2 = uiState.moviesResponse2
+            )
+        }
     }
 }
 
 @Composable
 private fun HomeContent(
     modifier: Modifier = Modifier,
-    movies: LazyPagingItems<Movies>? = null,
-    movies2: List<Movies>? = null,
-    uiEvent: HomeUIEvent
+    moviesResponse: LazyPagingItems<Movie>? = null,
+    moviesResponse2: List<Movie>? = null,
 ) {
+    val event = LocalHomeEvent.current
     val coroutine = rememberCoroutineScope()
     var isContentVisible by remember { mutableStateOf(false) }
     var hasAnimated by remember { mutableStateOf(false) }
@@ -133,8 +135,7 @@ private fun HomeContent(
         isContentVisible = true
     }
 
-    val coroutineScope = rememberCoroutineScope()
-    val tabTitles = listOf("Trending", "Top Rated", "Now Playing", "Upcoming", "TV Shows")
+    val tabTitles = MovieTab.entries
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { tabTitles.size }
@@ -150,8 +151,8 @@ private fun HomeContent(
 
         AnimatedVisibility(
             visible = isContentVisible,
-            enter = fadeIn(tween(durationMillis = 500)) + slideInHorizontally(tween(1000)),
-            exit = fadeOut(tween(durationMillis = 500)) + slideOutHorizontally(tween(1000)) { it }
+            enter = fadeIn(tween(500)) + slideInHorizontally(tween(1000)),
+            exit = fadeOut(tween(500)) + slideOutHorizontally(tween(1000)) { it }
         ) {
             ScrollableTabRow(
                 modifier = Modifier
@@ -163,22 +164,22 @@ private fun HomeContent(
                 divider = {},
                 indicator = {}
             ) {
-                tabTitles.forEachIndexed { index, title ->
+                tabTitles.forEachIndexed { index, movie ->
                     Box {
                         Text(
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .clickable {
-                                    coroutineScope.launch {
-                                        uiEvent.onCategory(index.plus(1))
+                                    coroutine.launch {
+                                        event.onCategory(movie)
                                         pagerState.animateScrollToPage(index)
                                     }
                                 },
-                            text = title,
+                            text = movie.title,
                             style = if (pagerState.currentPage == index) MaterialTheme.typography.titleMedium
                             else MaterialTheme.typography.bodySmall,
                             color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface,
+                            else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -191,14 +192,14 @@ private fun HomeContent(
             state = pagerState,
             modifier = Modifier.fillMaxWidth()
         ) { page ->
-            LazyRowCorousel(
+            LazyRowCarousel(
                 isContentVisible = isContentVisible,
-                movies = movies
+                moviesResponse = moviesResponse
             ) {
                 coroutine.launch {
                     isContentVisible = false
                     delay(1000)
-                    uiEvent.onDetail(it)
+                    event.onDetail(it)
                 }
             }
         }
@@ -213,22 +214,22 @@ private fun HomeContent(
         ) {
             AnimatedVisibility(
                 visible = isContentVisible,
-                enter = fadeIn(tween(durationMillis = 500)),
-                exit = fadeOut(tween(durationMillis = 500))
+                enter = fadeIn(tween(500)),
+                exit = fadeOut(tween(500))
             ) {
                 Text(
-                    "For you",
+                    text = "For you",
                     style = MaterialTheme.typography.titleLarge
                 )
             }
 
             AnimatedVisibility(
                 visible = isContentVisible,
-                enter = fadeIn(tween(durationMillis = 500)),
-                exit = fadeOut(tween(durationMillis = 500))
+                enter = fadeIn(tween(500)),
+                exit = fadeOut(tween(500))
             ) {
                 Text(
-                    "See all",
+                    text = "See all",
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -240,7 +241,7 @@ private fun HomeContent(
             modifier = Modifier.padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            itemsIndexed(movies2 ?: emptyList()) { index, data ->
+            itemsIndexed(moviesResponse2 ?: emptyList()) { index, data ->
                 MovieItemGrid(
                     item = data,
                     index = index,
@@ -253,7 +254,7 @@ private fun HomeContent(
                         coroutine.launch {
                             isContentVisible = false
                             delay(1000)
-                            uiEvent.onDetail(it)
+                            event.onDetail(it)
                         }
                     }
                 )
@@ -267,19 +268,19 @@ private fun HomeContent(
 @Composable
 fun MovieItemGrid(
     modifier: Modifier = Modifier,
-    item: Movies,
+    item: Movie,
     index: Int,
     isContentVisible: Boolean = true,
     hasAnimated: Boolean,
     onAnimated: () -> Unit,
-    onDetail: (Movies) -> Unit
+    onDetail: (Movie) -> Unit
 ) {
     var isAnimation by remember { mutableStateOf(false) }
     var isPressed by remember { mutableStateOf(false) }
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 1.1f else 1f,
-        animationSpec = tween(durationMillis = 200),
+        animationSpec = tween(200),
         label = ""
     )
 
@@ -297,7 +298,7 @@ fun MovieItemGrid(
         }
     }
 
-    val url: String = POSTER_BASE_URL + W185 + item.poster_path
+    val url: String = POSTER_BASE_URL + W185 + item.posterPath
     val context = LocalContext.current
     val model = remember {
         ImageRequest.Builder(context)
@@ -313,11 +314,11 @@ fun MovieItemGrid(
         visible = isAnimation,
         enter = fadeIn(tween(500)) + scaleIn(
             initialScale = 0.8f,
-            animationSpec = tween(durationMillis = 1000)
+            animationSpec = tween(1000)
         ),
         exit = fadeOut(tween(500)) + scaleOut(
             targetScale = 0.8f,
-            animationSpec = tween(durationMillis = 500)
+            animationSpec = tween(500)
         )
     ) {
         Box(
@@ -331,6 +332,8 @@ fun MovieItemGrid(
                             isPressed = true
                             tryAwaitRelease()
                             isPressed = false
+                        },
+                        onLongPress = {
                             onDetail.invoke(item)
                         }
                     )
@@ -349,17 +352,14 @@ fun MovieItemGrid(
             )
         }
     }
-
 }
-
 
 @Preview(showBackground = true)
 @Composable
 private fun HomePreview() {
     MovieTheme {
         HomeContent(
-            movies = null,
-            uiEvent = HomeUIEvent()
+            moviesResponse = null
         )
     }
 }

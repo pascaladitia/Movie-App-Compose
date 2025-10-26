@@ -62,7 +62,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
 import com.pascal.movie.R
-import com.pascal.movie.domain.model.movie.Movies
+import com.pascal.movie.domain.model.Movie
 import com.pascal.movie.ui.theme.LightGray
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
@@ -71,30 +71,30 @@ import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 @Composable
-fun LazyRowCorousel(
+fun LazyRowCarousel(
     modifier: Modifier = Modifier,
     isContentVisible: Boolean = true,
-    movies: LazyPagingItems<Movies>?,
+    moviesResponse: LazyPagingItems<Movie>?,
     dotsActiveColor: Color = MaterialTheme.colorScheme.primary,
     dotsInActiveColor: Color = Color.LightGray,
     dotsSize: Dp = 6.dp,
     pagerPaddingValues: PaddingValues = PaddingValues(horizontal = 65.dp),
     imageCornerRadius: Dp = 16.dp,
     imageHeight: Dp = 350.dp,
-    onDetail: (Movies) -> Unit
+    onDetail: (Movie) -> Unit
 ) {
-    if (movies == null || movies.itemCount == 0) {
+    if (moviesResponse == null || moviesResponse.itemCount == 0) {
         LazyRowShimmer()
         return
     }
 
-    var movie by remember { mutableStateOf<Movies?>(null) }
-    var baseMovie by remember { mutableStateOf<Movies?>(null) }
+    var movie by remember { mutableStateOf<Movie?>(null) }
+    var baseMovie by remember { mutableStateOf<Movie?>(null) }
     var isSlide by remember { mutableStateOf(true) }
 
     val pagerState = rememberPagerState(
         initialPage = 1,
-        pageCount = { movies.itemCount }
+        pageCount = { moviesResponse.itemCount }
     )
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -123,8 +123,8 @@ fun LazyRowCorousel(
                     contentPadding = pagerPaddingValues,
                     modifier = modifier
                 ) { page ->
-                    baseMovie = movies[pagerState.currentPage]
-                    val result = movies[page]
+                    baseMovie = moviesResponse[pagerState.currentPage]
+                    val result = moviesResponse[page]
 
                     val pageOffset =
                         (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
@@ -145,7 +145,7 @@ fun LazyRowCorousel(
                             .clip(RoundedCornerShape(imageCornerRadius))
                             .clickable { result?.let { onDetail(it) } }
                     ) {
-                        val url: String = POSTER_BASE_URL + W185 + result?.poster_path
+                        val url: String = POSTER_BASE_URL + W185 + result?.posterPath
 
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -201,7 +201,7 @@ fun LazyRowCorousel(
                 exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically()
             ) {
                 Text(
-                    text = movie?.release_date ?: "Empty Date",
+                    text = movie?.releaseDate ?: "Empty Date",
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -241,7 +241,7 @@ fun LazyRowCorousel(
                             .size(size)
                             .background(color)
                             .clickable {
-                                if (actualIndex < movies.itemCount) {
+                                if (actualIndex < moviesResponse.itemCount) {
                                     scope.launch {
                                         pagerState.animateScrollToPage(actualIndex)
                                     }

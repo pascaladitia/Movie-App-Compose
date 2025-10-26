@@ -1,4 +1,4 @@
-package com.pascal.movie.domain.base
+package com.pascal.movie.utils.base
 
 sealed class UiState<out T> {
     data object Loading : UiState<Nothing>()
