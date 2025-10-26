@@ -156,6 +156,7 @@ fun SharedTransitionScope.LazyRowCarousel(
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(url)
+                                .memoryCacheKey("poster_${result?.id}")
                                 .size(Size.ORIGINAL)
                                 .crossfade(true)
                                 .error(R.drawable.no_thumbnail)

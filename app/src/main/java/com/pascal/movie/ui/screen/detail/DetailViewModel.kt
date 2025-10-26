@@ -1,5 +1,6 @@
 package com.pascal.movie.ui.screen.detail
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pascal.movie.data.local.entity.FavoritesEntity
@@ -11,6 +12,7 @@ import com.pascal.movie.ui.screen.detail.state.DetailUIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -24,41 +26,36 @@ class DetailViewModel(
     private val _uiState = MutableStateFlow(DetailUIState())
     val uiState: StateFlow<DetailUIState> = _uiState.asStateFlow()
 
-    fun loadDetailMovie(movie: Movie?) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+    suspend fun loadDetailMovie(movie: Movie?) {
+        _uiState.update { it.copy(isLoading = true) }
 
-            try {
-                val movieId = movie?.id ?: 0
+        val movieId = movie?.id ?: 0
 
-                combine(
-                    movieUseCase.getMovieVideos(movieId),
-                    movieUseCase.getMovieReviews(movieId)
-                ) { videos, reviews ->
-                    val favorite = localUseCase.getFavoriteMovie(movieId)
-                    MovieDetailMapping(
-                        review = reviews.results,
-                        videos = videos.results,
-                        movie = movie,
-                        favorite = favorite
-                    )
-                }.collectLatest { mapping ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            movies = mapping
-                        )
-                    }
-                }
-
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        isError = true,
-                        message = e.message.orEmpty()
-                    )
-                }
+        combine(
+            movieUseCase.getMovieVideos(movieId),
+            movieUseCase.getMovieReviews(movieId)
+        ) { videos, reviews ->
+            val favorite = localUseCase.getFavoriteMovie(movieId)
+            MovieDetailMapping(
+                review = reviews.results,
+                videos = videos.results,
+                movie = movie,
+                favorite = favorite
+            )
+        }.catch {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isError = true,
+                    message = it.message
+                )
+            }
+        }.collectLatest { mapping ->
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    movies = mapping
+                )
             }
         }
     }

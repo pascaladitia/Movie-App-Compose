@@ -3,6 +3,7 @@ package com.pascal.movie.ui.screen.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -45,6 +46,7 @@ import coil.size.Size
 import com.pascal.movie.R
 import com.pascal.movie.domain.model.Movie
 import com.pascal.movie.ui.component.dialog.ShowDialog
+import com.pascal.movie.ui.screen.detail.DetailContent
 import com.pascal.movie.ui.screen.home.component.LazyRowCarousel
 import com.pascal.movie.ui.screen.home.state.LocalHomeEvent
 import com.pascal.movie.ui.theme.MovieTheme
@@ -339,12 +341,20 @@ fun MovieItemGrid(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview(showBackground = true)
 @Composable
 private fun HomePreview() {
-    MovieTheme {
-//        HomeContent(
-//            moviesResponse = null
-//        )
+    SharedTransitionLayout {
+        val sharedScope = this
+        AnimatedVisibility(
+            visible = true,
+            content = {
+                HomeContent(
+                    sharedTransitionScope = sharedScope,
+                    animatedVisibilityScope = this
+                )
+            }
+        )
     }
 }

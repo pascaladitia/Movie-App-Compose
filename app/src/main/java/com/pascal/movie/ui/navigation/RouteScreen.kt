@@ -13,7 +13,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.constraintlayout.compose.ExperimentalMotionApi
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,8 +23,8 @@ import com.pascal.movie.ui.screen.favorite.FavoriteScreen
 import com.pascal.movie.ui.screen.home.HomeScreen
 import com.pascal.movie.ui.screen.profile.ProfileScreen
 import com.pascal.movie.ui.screen.splash.SplashScreen
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import com.pascal.movie.utils.base.getFromPreviousBackStack
+import com.pascal.movie.utils.base.saveToCurrentBackStack
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -108,21 +107,4 @@ fun RouteScreen(
             }
         }
     }
-}
-
-inline fun <reified T> saveToCurrentBackStack(
-    navController: NavController,
-    key: String,
-    data: T
-) {
-    val json = Json.encodeToString(data)
-    navController.currentBackStackEntry?.savedStateHandle?.set(key, json)
-}
-
-inline fun <reified T> getFromPreviousBackStack(
-    navController: NavController,
-    key: String
-): T? {
-    val json = navController.previousBackStackEntry?.savedStateHandle?.get<String>(key)
-    return json?.let { Json.decodeFromString(it) }
 }

@@ -3,19 +3,14 @@ package com.pascal.movie.ui.screen.detail
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -25,12 +20,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -51,8 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -64,24 +55,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import coil.size.Size
 import com.pascal.movie.R
 import com.pascal.movie.data.local.entity.FavoritesEntity
 import com.pascal.movie.domain.model.Movie
-import com.pascal.movie.domain.model.MovieDetailMapping
-import com.pascal.movie.domain.model.Video
 import com.pascal.movie.ui.component.dialog.ShowDialog
+import com.pascal.movie.ui.screen.detail.component.DetailReview
 import com.pascal.movie.ui.screen.detail.component.DetailShimmerAnimation
+import com.pascal.movie.ui.screen.detail.component.DetailTrailerItem
+import com.pascal.movie.ui.screen.detail.state.DetailUIState
 import com.pascal.movie.ui.screen.detail.state.LocalDetailEvent
-import com.pascal.movie.ui.theme.MovieTheme
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
-import com.pascal.movie.utils.Constant.YOUTUBE_TN_URL
-import com.pascal.movie.utils.Constant.YOUTUBE_TRAILERS_URL
-import com.pascal.movie.utils.intentActionView
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ChevronLeft
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -101,7 +87,8 @@ fun DetailScreen(
     var isContentVisible by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(moviesResponse?.id) {
+    LaunchedEffect(Unit) {
+        isContentVisible = true
         viewModel.loadDetailMovie(moviesResponse)
     }
 
@@ -113,7 +100,6 @@ fun DetailScreen(
             viewModel.setError(false)
         }
     }
-
 
     CompositionLocalProvider(
         LocalDetailEvent provides event.copy(
@@ -129,16 +115,12 @@ fun DetailScreen(
             modifier = modifier.padding(paddingValues),
             color = MaterialTheme.colorScheme.background
         ) {
-            if (uiState.isLoading) {
-                DetailShimmerAnimation()
-            } else {
-                DetailContent(
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedVisibilityScope = animatedVisibilityScope,
-                    isContentVisible = isContentVisible,
-                    item = uiState.movies
-                )
-            }
+            DetailContent(
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope,
+                isContentVisible = isContentVisible,
+                uiState = uiState
+            )
         }
     }
 }
@@ -150,9 +132,11 @@ fun DetailContent(
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     isContentVisible: Boolean = true,
-    item: MovieDetailMapping? = null,
+    uiState: DetailUIState,
 ) {
     val event = LocalDetailEvent.current
+
+    val item = uiState.movies
     var hasAnimated by remember { mutableStateOf(false) }
     var favBtnClicked by rememberSaveable {
         mutableStateOf(item?.favorite ?: false)
@@ -198,7 +182,7 @@ fun DetailContent(
                         )
                     },
                 imageVector = if (favBtnClicked) Icons.Default.Favorite
-                                else Icons.Default.FavoriteBorder,
+                else Icons.Default.FavoriteBorder,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.tertiary
             )
@@ -207,12 +191,11 @@ fun DetailContent(
         Spacer(Modifier.height(24.dp))
 
         with(sharedTransitionScope) {
-            val logoKey = rememberSharedContentState(key = "poster_${item?.movie?.id}")
+            val sharedKey = rememberSharedContentState(key = "poster_${item?.movie?.id}")
             Image(
                 painter = rememberAsyncImagePainter(
                     ImageRequest.Builder(LocalContext.current)
                         .data(data = url)
-                        .error(R.drawable.no_thumbnail)
                         .apply { crossfade(true) }
                         .build()
                 ),
@@ -220,9 +203,9 @@ fun DetailContent(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp)
+                    .height(400.dp)
                     .sharedElement(
-                        state = logoKey,
+                        state = sharedKey,
                         animatedVisibilityScope = animatedVisibilityScope,
                         renderInOverlayDuringTransition = true
                     )
@@ -231,110 +214,119 @@ fun DetailContent(
 
         Spacer(Modifier.height(24.dp))
 
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            text = item?.movie?.title ?: "Empty Title",
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
 
-        Spacer(Modifier.height(12.dp))
-
-        Text(
-            text = item?.movie?.releaseDate ?: "Empty Date",
-            style = MaterialTheme.typography.bodySmall
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            DetailContentItem(
-                modifier = Modifier.weight(1f),
-                title = "popularity",
-                value = "${item?.movie?.popularity ?: 0}"
+        if (uiState.isLoading) {
+            DetailShimmerAnimation()
+        } else {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                text = item?.movie?.title ?: "Empty Title",
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
-            DetailContentItem(
-                modifier = Modifier.weight(1f),
-                title = "Language",
-                value = item?.movie?.originalLanguage ?: "En"
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                text = item?.movie?.releaseDate ?: "Empty Date",
+                style = MaterialTheme.typography.bodySmall
             )
 
-            DetailContentItem(
-                modifier = Modifier.weight(1f),
-                title = "vote",
-                value = "${item?.movie?.voteCount ?: 0}"
-            )
-        }
+            Spacer(Modifier.height(24.dp))
 
-        Spacer(Modifier.height(24.dp))
-
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            text = item?.movie?.overview ?: "No Description",
-            style = MaterialTheme.typography.bodySmall
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            AnimatedVisibility(
-                visible = isContentVisible,
-                enter = fadeIn(tween(durationMillis = 500)),
-                exit = fadeOut(tween(durationMillis = 500))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    "Trailer",
-                    style = MaterialTheme.typography.titleLarge
+                DetailContentItem(
+                    modifier = Modifier.weight(1f),
+                    title = "popularity",
+                    value = "${item?.movie?.popularity ?: 0}"
+                )
+
+                DetailContentItem(
+                    modifier = Modifier.weight(1f),
+                    title = "Language",
+                    value = item?.movie?.originalLanguage ?: "En"
+                )
+
+                DetailContentItem(
+                    modifier = Modifier.weight(1f),
+                    title = "vote",
+                    value = "${item?.movie?.voteCount ?: 0}"
                 )
             }
 
-            AnimatedVisibility(
-                visible = isContentVisible,
-                enter = fadeIn(tween(durationMillis = 500)),
-                exit = fadeOut(tween(durationMillis = 500))
+            Spacer(Modifier.height(24.dp))
+
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                text = item?.movie?.overview ?: "No Description",
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    "See all",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                AnimatedVisibility(
+                    visible = isContentVisible,
+                    enter = fadeIn(tween(durationMillis = 500)),
+                    exit = fadeOut(tween(durationMillis = 500))
+                ) {
+                    Text(
+                        "Trailer",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = isContentVisible,
+                    enter = fadeIn(tween(durationMillis = 500)),
+                    exit = fadeOut(tween(durationMillis = 500))
+                ) {
+                    Text(
+                        "See all",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
-        }
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            itemsIndexed(item?.videos ?: emptyList()) { index, data ->
-                DetailTrailerItem(
-                    item = data,
-                    index = index,
-                    isContentVisible = isContentVisible,
-                    hasAnimated = hasAnimated,
-                    onAnimated = {
-                        hasAnimated = true
-                    }
-                )
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                itemsIndexed(item?.videos ?: emptyList()) { index, data ->
+                    DetailTrailerItem(
+                        item = data,
+                        index = index,
+                        isContentVisible = isContentVisible,
+                        hasAnimated = hasAnimated,
+                        onAnimated = {
+                            hasAnimated = true
+                        }
+                    )
+                }
+            }
+
+            if (!item?.review.isNullOrEmpty()) {
+                DetailReview(review = item.review)
             }
         }
     }
@@ -364,101 +356,24 @@ fun DetailContentItem(
     }
 }
 
-@Composable
-fun DetailTrailerItem(
-    modifier: Modifier = Modifier,
-    item: Video? = null,
-    index: Int,
-    isContentVisible: Boolean = true,
-    hasAnimated: Boolean,
-    onAnimated: () -> Unit
-) {
-    var isAnimation by remember { mutableStateOf(false) }
-    var isPressed by remember { mutableStateOf(false) }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 1.1f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = ""
-    )
-
-    LaunchedEffect(isContentVisible) {
-        if (isContentVisible) {
-            if (!hasAnimated) {
-                delay(200 * index.toLong())
-                isAnimation = true
-                onAnimated()
-            } else {
-                isAnimation = true
-            }
-        } else {
-            isAnimation = false
-        }
-    }
-
-    val urlThumbnail = YOUTUBE_TN_URL + item?.key + "/hqdefault.jpg"
-    val context = LocalContext.current
-    val model = remember {
-        ImageRequest.Builder(context)
-            .data(urlThumbnail)
-            .size(Size.ORIGINAL)
-            .crossfade(true)
-            .error(R.drawable.no_thumbnail)
-            .placeholder(R.color.gray)
-            .build()
-    }
-
-    AnimatedVisibility(
-        visible = isAnimation,
-        enter = fadeIn(tween(500)) + scaleIn(
-            initialScale = 0.8f,
-            animationSpec = tween(durationMillis = 1000)
-        ),
-        exit = fadeOut(tween(500)) + scaleOut(
-            targetScale = 0.8f,
-            animationSpec = tween(durationMillis = 500)
-        )
-    ) {
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .scale(scale)
-                .clip(RoundedCornerShape(16.dp))
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onPress = {
-                            isPressed = true
-                            tryAwaitRelease()
-                            isPressed = false
-                        },
-                        onLongPress = {
-                            val trailerUrl = YOUTUBE_TRAILERS_URL + item?.key
-                            intentActionView(context, trailerUrl)
-                        }
-                    )
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            AsyncImage(
-                model = model,
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .width(200.dp)
-                    .height(110.dp)
-                    .align(Alignment.Center),
-                contentScale = ContentScale.Crop
-            )
-        }
-    }
-
-}
 
 
+
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview(showBackground = true)
 @Composable
-private fun DetailPreview() {
-    MovieTheme {
-//        DetailContent()
+fun DetailContentPreview() {
+    SharedTransitionLayout {
+        val sharedScope = this
+        AnimatedVisibility(
+            visible = true,
+            content = {
+                DetailContent(
+                    sharedTransitionScope = sharedScope,
+                    animatedVisibilityScope = this,
+                    uiState = DetailUIState()
+                )
+            }
+        )
     }
 }

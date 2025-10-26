@@ -64,38 +64,7 @@ fun ShimmerItem(modifier: Modifier = Modifier, brush: Brush) {
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Spacer(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(brush)
-            )
-
-            Spacer(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(brush)
-            )
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .background(brush)
-        )
-
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
 
         Spacer(
             modifier = Modifier
