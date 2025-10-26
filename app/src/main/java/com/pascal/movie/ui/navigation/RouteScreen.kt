@@ -1,8 +1,18 @@
+@file:OptIn(
+    ExperimentalMotionApi::class,
+    ExperimentalSharedTransitionApi::class
+)
+
 package com.pascal.movie.ui.navigation
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.constraintlayout.compose.ExperimentalMotionApi
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -17,6 +27,7 @@ import com.pascal.movie.ui.screen.splash.SplashScreen
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun RouteScreen(
     navController: NavHostController = rememberNavController(),
@@ -35,55 +46,65 @@ fun RouteScreen(
             }
         }
     ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.SplashScreen.route
-        ) {
-            composable(route = Screen.SplashScreen.route) {
-                SplashScreen(
-                    paddingValues = paddingValues
-                ) {
-                    navController.navigate( Screen.HomeScreen.route) {
-                        popUpTo(Screen.SplashScreen.route) {
-                            inclusive = true
+        SharedTransitionLayout {
+            val sharedScope: SharedTransitionScope = this
+
+            NavHost(
+                navController = navController,
+                startDestination = Screen.SplashScreen.route
+            ) {
+                composable(route = Screen.SplashScreen.route) {
+                    SplashScreen(
+                        paddingValues = paddingValues
+                    ) {
+                        navController.navigate(Screen.HomeScreen.route) {
+                            popUpTo(Screen.SplashScreen.route) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
-                        launchSingleTop = true
                     }
                 }
-            }
-            composable(route = Screen.HomeScreen.route) {
-                HomeScreen(
-                    paddingValues = paddingValues,
-                    onDetail = {
-                        saveToCurrentBackStack(navController, "movies", it)
-                        navController.navigate(Screen.DetailScreen.route)
-                    }
-                )
-            }
-            composable(route = Screen.FavoriteScreen.route) {
-                FavoriteScreen(
-                    paddingValues = paddingValues,
-                    onDetail = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            composable(route = Screen.DetailScreen.route) {
-                DetailScreen(
-                    paddingValues = paddingValues,
-                    moviesResponse = getFromPreviousBackStack(navController, "movies"),
-                    onNavBack = {
-                        navController.navigateUp()
-                    }
-                )
-            }
-            composable(route = Screen.ProfileScreen.route) {
-                ProfileScreen(
-                    paddingValues = paddingValues,
-                    onDetail = {
+                composable(route = Screen.HomeScreen.route) {
+                    val animScope: AnimatedVisibilityScope = this
+                    HomeScreen(
+                        paddingValues = paddingValues,
+                        sharedTransitionScope = sharedScope,
+                        animatedVisibilityScope = animScope,
+                        onDetail = {
+                            saveToCurrentBackStack(navController, "movies", it)
+                            navController.navigate(Screen.DetailScreen.route)
+                        }
+                    )
+                }
+                composable(route = Screen.FavoriteScreen.route) {
+                    FavoriteScreen(
+                        paddingValues = paddingValues,
+                        onDetail = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+                composable(route = Screen.DetailScreen.route) {
+                    val animScope: AnimatedVisibilityScope = this
+                    DetailScreen(
+                        paddingValues = paddingValues,
+                        sharedTransitionScope = sharedScope,
+                        animatedVisibilityScope = animScope,
+                        moviesResponse = getFromPreviousBackStack(navController, "movies"),
+                        onNavBack = {
+                            navController.navigateUp()
+                        }
+                    )
+                }
+                composable(route = Screen.ProfileScreen.route) {
+                    ProfileScreen(
+                        paddingValues = paddingValues,
+                        onDetail = {
 
-                    }
-                )
+                        }
+                    )
+                }
             }
         }
     }

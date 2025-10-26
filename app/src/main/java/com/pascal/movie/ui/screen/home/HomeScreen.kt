@@ -1,6 +1,9 @@
 package com.pascal.movie.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -12,18 +15,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
@@ -31,18 +23,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,11 +54,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
     viewModel: HomeViewModel = koinInject<HomeViewModel>(),
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onDetail: (Movie) -> Unit
 ) {
     val event = LocalHomeEvent.current
@@ -113,6 +98,8 @@ fun HomeScreen(
             color = MaterialTheme.colorScheme.background
         ) {
             HomeContent(
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope,
                 moviesResponse = moviesResponse,
                 moviesResponse2 = uiState.moviesResponse2
             )
@@ -120,9 +107,12 @@ fun HomeScreen(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun HomeContent(
     modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     moviesResponse: LazyPagingItems<Movie>? = null,
     moviesResponse2: List<Movie>? = null,
 ) {
@@ -188,17 +178,16 @@ private fun HomeContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxWidth()
-        ) { page ->
-            LazyRowCarousel(
-                isContentVisible = isContentVisible,
-                moviesResponse = moviesResponse
-            ) {
-                coroutine.launch {
-                    isContentVisible = false
-                    delay(1000)
+        with(sharedTransitionScope) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth()
+            ) { page ->
+                LazyRowCarousel(
+                    isContentVisible = isContentVisible,
+                    moviesResponse = moviesResponse,
+                    animatedVisibilityScope = animatedVisibilityScope
+                ) {
                     event.onDetail(it)
                 }
             }
@@ -247,13 +236,9 @@ private fun HomeContent(
                     index = index,
                     isContentVisible = isContentVisible,
                     hasAnimated = hasAnimated,
-                    onAnimated = {
-                        hasAnimated = true
-                    },
+                    onAnimated = { hasAnimated = true },
                     onDetail = {
                         coroutine.launch {
-                            isContentVisible = false
-                            delay(1000)
                             event.onDetail(it)
                         }
                     }
@@ -358,8 +343,8 @@ fun MovieItemGrid(
 @Composable
 private fun HomePreview() {
     MovieTheme {
-        HomeContent(
-            moviesResponse = null
-        )
+//        HomeContent(
+//            moviesResponse = null
+//        )
     }
 }

@@ -1,6 +1,10 @@
 package com.pascal.movie.ui.screen.detail
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -81,12 +85,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DetailScreen(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
     moviesResponse: Movie? = null,
     viewModel: DetailViewModel = koinViewModel(),
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onNavBack: () -> Unit
 ) {
     val event = LocalDetailEvent.current
@@ -94,8 +101,7 @@ fun DetailScreen(
     var isContentVisible by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        isContentVisible = true
+    LaunchedEffect(moviesResponse?.id) {
         viewModel.loadDetailMovie(moviesResponse)
     }
 
@@ -127,6 +133,8 @@ fun DetailScreen(
                 DetailShimmerAnimation()
             } else {
                 DetailContent(
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope,
                     isContentVisible = isContentVisible,
                     item = uiState.movies
                 )
@@ -135,9 +143,12 @@ fun DetailScreen(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DetailContent(
     modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     isContentVisible: Boolean = true,
     item: MovieDetailMapping? = null,
 ) {
@@ -195,20 +206,28 @@ fun DetailContent(
 
         Spacer(Modifier.height(24.dp))
 
-        Image(
-            painter = rememberAsyncImagePainter(
-                ImageRequest.Builder(LocalContext.current)
-                    .data(data = url)
-                    .error(R.drawable.no_thumbnail)
-                    .apply { crossfade(true) }
-                    .build()
-            ),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-        )
+        with(sharedTransitionScope) {
+            val logoKey = rememberSharedContentState(key = "poster_${item?.movie?.id}")
+            Image(
+                painter = rememberAsyncImagePainter(
+                    ImageRequest.Builder(LocalContext.current)
+                        .data(data = url)
+                        .error(R.drawable.no_thumbnail)
+                        .apply { crossfade(true) }
+                        .build()
+                ),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .sharedElement(
+                        state = logoKey,
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        renderInOverlayDuringTransition = true
+                    )
+            )
+        }
 
         Spacer(Modifier.height(24.dp))
 
@@ -440,6 +459,6 @@ fun DetailTrailerItem(
 @Composable
 private fun DetailPreview() {
     MovieTheme {
-        DetailContent()
+//        DetailContent()
     }
 }

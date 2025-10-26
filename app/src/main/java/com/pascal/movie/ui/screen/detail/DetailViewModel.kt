@@ -80,4 +80,10 @@ class DetailViewModel(
     fun setError(value: Boolean) {
         _uiState.update { it.copy(isError = value) }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+
+        _uiState.value = DetailUIState()
+    }
 }

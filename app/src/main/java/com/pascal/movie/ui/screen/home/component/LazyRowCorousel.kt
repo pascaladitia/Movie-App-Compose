@@ -1,6 +1,9 @@
 package com.pascal.movie.ui.screen.home.component
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -70,9 +73,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun LazyRowCarousel(
+fun SharedTransitionScope.LazyRowCarousel(
     modifier: Modifier = Modifier,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     isContentVisible: Boolean = true,
     moviesResponse: LazyPagingItems<Movie>?,
     dotsActiveColor: Color = MaterialTheme.colorScheme.primary,
@@ -116,12 +121,12 @@ fun LazyRowCarousel(
             exit = fadeOut(tween(durationMillis = 500)) + slideOutHorizontally(tween(1000))
         ) {
             Box(
-                modifier = modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 HorizontalPager(
                     state = pagerState,
                     contentPadding = pagerPaddingValues,
-                    modifier = modifier
+                    modifier = Modifier
                 ) { page ->
                     baseMovie = moviesResponse[pagerState.currentPage]
                     val result = moviesResponse[page]
@@ -131,6 +136,7 @@ fun LazyRowCarousel(
                     val scaleFactor = 0.75f + (1f - 0.75f) * (1f - pageOffset.absoluteValue)
                     val transX = with(density) { (pageOffset * 100.dp).toPx() }
                     val zIndex = 1f - pageOffset.absoluteValue
+                    val sharedKey = rememberSharedContentState(key = "poster_${result?.id}")
 
                     Box(
                         modifier = Modifier
@@ -157,8 +163,13 @@ fun LazyRowCarousel(
                                 .build(),
                             contentDescription = result?.title,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier
+                            modifier = modifier
                                 .height(imageHeight)
+                                .sharedElement(
+                                    state = sharedKey,
+                                    animatedVisibilityScope = animatedVisibilityScope,
+                                    renderInOverlayDuringTransition = true
+                                )
                         )
                     }
                 }
@@ -235,7 +246,7 @@ fun LazyRowCarousel(
                     )
 
                     Box(
-                        modifier = modifier
+                        modifier = Modifier
                             .padding(2.dp)
                             .clip(CircleShape)
                             .size(size)
