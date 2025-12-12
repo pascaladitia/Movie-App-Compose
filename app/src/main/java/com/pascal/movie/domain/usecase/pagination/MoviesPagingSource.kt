@@ -2,14 +2,11 @@ package com.pascal.movie.domain.usecase.pagination
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.pascal.movie.data.local.repository.LocalRepositoryImpl
 import com.pascal.movie.data.remote.api.KtorClientApi
 import com.pascal.movie.data.remote.dtos.movie.MoviesResponse
-import com.pascal.movie.data.remote.dtos.movie.emptyMoviesResponse
 import com.pascal.movie.ui.screen.home.MovieTab
 
 class MoviesPagingSource(
-    private val localRepository: LocalRepositoryImpl,
     private val selection: MovieTab
 ) : PagingSource<Int, MoviesResponse>() {
 
@@ -30,11 +27,6 @@ class MoviesPagingSource(
                 MovieTab.NOW_PLAYING -> KtorClientApi.getNowPlaying(page).results.orEmpty()
                 MovieTab.UPCOMING -> KtorClientApi.getUpcoming(page).results.orEmpty()
                 MovieTab.TV_SHOWS -> KtorClientApi.getTvShow(page).results.orEmpty()
-                MovieTab.FAVORITES -> if (page == 1) {
-                    localRepository.getFavorite()?.map {
-                        emptyMoviesResponse.copy(id = it.id, posterPath = it.posterPath)
-                    }.orEmpty()
-                } else emptyList()
             }
 
             LoadResult.Page(

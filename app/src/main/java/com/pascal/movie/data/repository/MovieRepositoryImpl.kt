@@ -4,7 +4,6 @@ import ReviewsCatalogResponse
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.pascal.movie.data.local.repository.LocalRepositoryImpl
 import com.pascal.movie.data.remote.api.KtorClientApi
 import com.pascal.movie.data.remote.dtos.dashboard.DashboardResponse
 import com.pascal.movie.data.remote.dtos.movie.MoviesResponse
@@ -15,9 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import org.koin.core.annotation.Single
 
 @Single
-class MovieRepositoryImpl(
-    private val localDataSource: LocalRepositoryImpl,
-) : MovieRepository {
+class MovieRepositoryImpl : MovieRepository {
     override suspend fun dashboard(): DashboardResponse {
         return KtorClientApi.dashboard()
     }
@@ -30,7 +27,7 @@ class MovieRepositoryImpl(
         return Pager(
             config = PagingConfig(pageSize = 1),
             pagingSourceFactory = {
-                MoviesPagingSource(localDataSource, selection)
+                MoviesPagingSource(selection)
             }
         ).flow
     }

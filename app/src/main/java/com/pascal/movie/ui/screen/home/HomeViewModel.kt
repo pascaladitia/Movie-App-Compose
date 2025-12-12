@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.pascal.movie.data.local.repository.LocalRepositoryImpl
 import com.pascal.movie.domain.model.Movie
 import com.pascal.movie.domain.usecase.local.LocalUseCase
 import com.pascal.movie.domain.usecase.movie.MovieUseCase
@@ -70,6 +69,5 @@ enum class MovieTab(val title: String) {
     TOP_RATED("Top Rated"),
     NOW_PLAYING("Now Playing"),
     UPCOMING("Upcoming"),
-    TV_SHOWS("TV Shows"),
-    FAVORITES("Favorites");
+    TV_SHOWS("TV Shows")
 }

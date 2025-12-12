@@ -8,9 +8,10 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,10 +21,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -43,22 +46,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.pascal.movie.R
-import com.pascal.movie.data.local.entity.FavoritesEntity
 import com.pascal.movie.domain.model.Movie
 import com.pascal.movie.ui.component.dialog.ShowDialog
+import com.pascal.movie.ui.component.screenUtils.DynamicAsyncImage
+import com.pascal.movie.ui.component.screenUtils.shadowComponent
 import com.pascal.movie.ui.screen.detail.component.DetailReview
 import com.pascal.movie.ui.screen.detail.component.DetailShimmerAnimation
 import com.pascal.movie.ui.screen.detail.component.DetailTrailerItem
@@ -144,187 +147,226 @@ fun DetailContent(
 
     val url: String = POSTER_BASE_URL + W185 + item?.movie?.posterPath
 
-    Column(
+    ConstraintLayout(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .verticalScroll(rememberScrollState())
     ) {
+        val (imageBackground, header, image, content) = createRefs()
+
+        DynamicAsyncImage(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .blur(20.dp)
+                .constrainAs(imageBackground) {
+                    top.linkTo(parent.top)
+                },
+            imageUrl = url,
+            contentScale = ContentScale.Crop
+        )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(16.dp)
+                .constrainAs(header) {
+                    top.linkTo(parent.top)
+                },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
+            Box(
                 modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .clickable { event.onNavBack() },
-                imageVector = FeatherIcons.ChevronLeft,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary
-            )
+                    .background(Color.Black.copy(0.2f), RoundedCornerShape(8.dp))
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .clickable { event.onNavBack() },
+                    imageVector = FeatherIcons.ChevronLeft,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+            }
 
-            Icon(
+            Box(
                 modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        favBtnClicked = !favBtnClicked
-                        event.onFavorite(
-                            uiState.movies?.movie,
-                            favBtnClicked
-                        )
-                    },
-                imageVector = if (favBtnClicked) Icons.Default.Favorite
-                else Icons.Default.FavoriteBorder,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary
-            )
+                    .background(Color.Black.copy(0.2f), RoundedCornerShape(8.dp))
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .clickable {
+                            favBtnClicked = !favBtnClicked
+                            event.onFavorite(
+                                uiState.movies?.movie,
+                                favBtnClicked
+                            )
+                        },
+                    imageVector = if (favBtnClicked) Icons.Default.Favorite
+                    else Icons.Default.FavoriteBorder,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+            }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .padding(vertical = 16.dp)
+                .constrainAs(content) {
+                    top.linkTo(imageBackground.bottom, (-24).dp)
+                },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(140.dp))
+
+            if (uiState.isLoading) {
+                DetailShimmerAnimation()
+            } else {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    text = item?.movie?.title ?: "Empty Title",
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = item?.movie?.releaseDate ?: "Empty Date",
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    DetailContentItem(
+                        modifier = Modifier.weight(1f),
+                        title = "popularity",
+                        value = "${item?.movie?.popularity ?: 0}"
+                    )
+
+                    DetailContentItem(
+                        modifier = Modifier.weight(1f),
+                        title = "Language",
+                        value = item?.movie?.originalLanguage ?: "En"
+                    )
+
+                    DetailContentItem(
+                        modifier = Modifier.weight(1f),
+                        title = "vote",
+                        value = "${item?.movie?.voteCount ?: 0}"
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    text = item?.movie?.overview ?: "No Description",
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    AnimatedVisibility(
+                        visible = isContentVisible,
+                        enter = fadeIn(tween(durationMillis = 500)),
+                        exit = fadeOut(tween(durationMillis = 500))
+                    ) {
+                        Text(
+                            "Trailer",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = isContentVisible,
+                        enter = fadeIn(tween(durationMillis = 500)),
+                        exit = fadeOut(tween(durationMillis = 500))
+                    ) {
+                        Text(
+                            "See all",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    itemsIndexed(item?.videos ?: emptyList()) { index, data ->
+                        DetailTrailerItem(
+                            item = data,
+                            index = index,
+                            isContentVisible = isContentVisible,
+                            hasAnimated = hasAnimated,
+                            onAnimated = {
+                                hasAnimated = true
+                            }
+                        )
+                    }
+                }
+
+                if (!item?.review.isNullOrEmpty()) {
+                    DetailReview(review = item.review)
+                }
+            }
+        }
 
         with(sharedTransitionScope) {
             val sharedKey = rememberSharedContentState(key = "poster_${item?.movie?.id}")
-            Image(
-                painter = rememberAsyncImagePainter(
-                    ImageRequest.Builder(LocalContext.current)
-                        .data(data = url)
-                        .apply { crossfade(true) }
-                        .build()
-                ),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+
+            DynamicAsyncImage(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(400.dp)
+                    .width(200.dp)
+                    .height(280.dp)
+                    .shadowComponent(
+                        color = Color.White.copy(0.2f),
+                        blurRadius = 16.dp
+                    )
                     .sharedElement(
                         state = sharedKey,
                         animatedVisibilityScope = animatedVisibilityScope,
                         renderInOverlayDuringTransition = true
                     )
+                    .constrainAs(image) {
+                        centerAround(content.top)
+                        centerHorizontallyTo(parent)
+                    },
+                imageUrl = url,
+                contentScale = ContentScale.Crop
             )
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-
-        if (uiState.isLoading) {
-            DetailShimmerAnimation()
-        } else {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                text = item?.movie?.title ?: "Empty Title",
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                text = item?.movie?.releaseDate ?: "Empty Date",
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                DetailContentItem(
-                    modifier = Modifier.weight(1f),
-                    title = "popularity",
-                    value = "${item?.movie?.popularity ?: 0}"
-                )
-
-                DetailContentItem(
-                    modifier = Modifier.weight(1f),
-                    title = "Language",
-                    value = item?.movie?.originalLanguage ?: "En"
-                )
-
-                DetailContentItem(
-                    modifier = Modifier.weight(1f),
-                    title = "vote",
-                    value = "${item?.movie?.voteCount ?: 0}"
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                text = item?.movie?.overview ?: "No Description",
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                AnimatedVisibility(
-                    visible = isContentVisible,
-                    enter = fadeIn(tween(durationMillis = 500)),
-                    exit = fadeOut(tween(durationMillis = 500))
-                ) {
-                    Text(
-                        "Trailer",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-
-                AnimatedVisibility(
-                    visible = isContentVisible,
-                    enter = fadeIn(tween(durationMillis = 500)),
-                    exit = fadeOut(tween(durationMillis = 500))
-                ) {
-                    Text(
-                        "See all",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                itemsIndexed(item?.videos ?: emptyList()) { index, data ->
-                    DetailTrailerItem(
-                        item = data,
-                        index = index,
-                        isContentVisible = isContentVisible,
-                        hasAnimated = hasAnimated,
-                        onAnimated = {
-                            hasAnimated = true
-                        }
-                    )
-                }
-            }
-
-            if (!item?.review.isNullOrEmpty()) {
-                DetailReview(review = item.review)
-            }
         }
     }
 }

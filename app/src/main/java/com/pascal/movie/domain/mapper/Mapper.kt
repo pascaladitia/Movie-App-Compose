@@ -30,7 +30,7 @@ fun MoviesResponse.toDomain(): Movie {
     return Movie(
         backdropPath = backdropPath.orEmpty(),
         id = id ?: 0,
-        title = title.orEmpty(),
+        title = title ?: "No Title",
         originalTitle = originalTitle.orEmpty(),
         overview = overview.orEmpty(),
         posterPath = posterPath.orEmpty(),
