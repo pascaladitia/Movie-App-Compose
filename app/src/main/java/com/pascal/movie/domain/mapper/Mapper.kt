@@ -3,6 +3,7 @@ package com.pascal.movie.domain.mapper
 import AuthorDetailsResponse
 import ReviewResponse
 import ReviewsCatalogResponse
+import com.pascal.movie.data.local.entity.FavoritesEntity
 import com.pascal.movie.data.remote.dtos.dashboard.DashboardResponse
 import com.pascal.movie.data.remote.dtos.movie.MoviesCatalogResponse
 import com.pascal.movie.data.remote.dtos.movie.MoviesResponse
@@ -106,5 +107,44 @@ fun VideosCatalogResponse.toDomain(): VideosCatalog {
         results = results?.map { it.toDomain() } ?: emptyList()
     )
 }
+
+fun Movie.toEntity() = FavoritesEntity(
+    id = id,
+    backdropPath = backdropPath,
+    title = title,
+    originalTitle = originalTitle,
+    overview = overview,
+    posterPath = posterPath,
+    mediaType = mediaType,
+    adult = adult,
+    originalLanguage = originalLanguage,
+    genreIds = genreIds,
+    popularity = popularity,
+    releaseDate = releaseDate,
+    video = video,
+    voteAverage = voteAverage,
+    voteCount = voteCount
+)
+
+fun FavoritesEntity.toDomain() = Movie(
+    id = id,
+    backdropPath = backdropPath.orEmpty(),
+    title = title.orEmpty(),
+    originalTitle = originalTitle.orEmpty(),
+    overview = overview.orEmpty(),
+    posterPath = posterPath.orEmpty(),
+    mediaType = mediaType.orEmpty(),
+    adult = adult ?: false,
+    originalLanguage = originalLanguage.orEmpty(),
+    genreIds = genreIds.orEmpty(),
+    popularity = popularity ?: 0.0,
+    releaseDate = releaseDate.orEmpty(),
+    video = video ?: false,
+    voteAverage = voteAverage ?: 0.0,
+    voteCount = voteCount ?: 0
+)
+
+
+
 
 

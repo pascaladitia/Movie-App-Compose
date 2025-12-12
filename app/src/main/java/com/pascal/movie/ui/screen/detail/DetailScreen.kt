@@ -174,10 +174,7 @@ fun DetailContent(
                     .clickable {
                         favBtnClicked = !favBtnClicked
                         event.onFavorite(
-                            FavoritesEntity(
-                                item?.movie?.id ?: 0,
-                                item?.movie?.posterPath ?: ""
-                            ),
+                            uiState.movies?.movie,
                             favBtnClicked
                         )
                     },

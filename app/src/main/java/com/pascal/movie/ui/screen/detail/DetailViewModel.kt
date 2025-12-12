@@ -1,12 +1,11 @@
 package com.pascal.movie.ui.screen.detail
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pascal.movie.data.local.entity.FavoritesEntity
-import com.pascal.movie.data.local.repository.LocalRepositoryImpl
 import com.pascal.movie.domain.model.Movie
 import com.pascal.movie.domain.model.MovieDetailMapping
+import com.pascal.movie.domain.usecase.local.LocalUseCase
 import com.pascal.movie.domain.usecase.movie.MovieUseCase
 import com.pascal.movie.ui.screen.detail.state.DetailUIState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +19,7 @@ import kotlinx.coroutines.launch
 
 class DetailViewModel(
     private val movieUseCase: MovieUseCase,
-    private val localUseCase: LocalRepositoryImpl
+    private val localUseCase: LocalUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DetailUIState())
@@ -35,7 +34,7 @@ class DetailViewModel(
             movieUseCase.getMovieVideos(movieId),
             movieUseCase.getMovieReviews(movieId)
         ) { videos, reviews ->
-            val favorite = localUseCase.getFavoriteMovie(movieId)
+            val favorite = localUseCase.getFavorite(movieId)
             MovieDetailMapping(
                 review = reviews.results,
                 videos = videos.results,
@@ -60,12 +59,14 @@ class DetailViewModel(
         }
     }
 
-    fun updateFavMovie(item: FavoritesEntity, checkFav: Boolean) {
+    fun updateFavMovie(item: Movie?, checkFav: Boolean) {
+        if (item == null) return
+
         viewModelScope.launch {
             if (checkFav) {
-                localUseCase.insertFavoriteItem(item)
+                localUseCase.insertFavorite(item)
             } else {
-                localUseCase.deleteFavoriteItem(item)
+                localUseCase.deleteFavorite(item)
             }
         }
     }

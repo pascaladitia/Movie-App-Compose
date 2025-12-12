@@ -1,28 +1,32 @@
 package com.pascal.movie.domain.usecase.local
 
-import com.pascal.movie.data.local.entity.ProfileEntity
 import com.pascal.movie.data.local.repository.LocalRepositoryImpl
-import kotlinx.coroutines.flow.Flow
+import com.pascal.movie.domain.mapper.toDomain
+import com.pascal.movie.domain.mapper.toEntity
+import com.pascal.movie.domain.model.Movie
 import org.koin.core.annotation.Single
 
 @Single
 class LocalUseCaseImpl(
-    private val localUseCase: LocalRepositoryImpl,
+    private val repository: LocalRepositoryImpl,
 ) : LocalUseCase {
-    override fun getProfileById(id: Long): Flow<ProfileEntity?> {
-        TODO("Not yet implemented")
+    override suspend fun insertFavorite(entity: Movie) {
+        repository.insertFavorite(entity.toEntity())
     }
 
-    override fun getAllProfiles(): Flow<List<ProfileEntity>> {
-        TODO("Not yet implemented")
+    override suspend fun deleteFavorite(entity: Movie) {
+        repository.deleteFavorite(entity.toEntity())
     }
 
-    override fun deleteProfileById(item: ProfileEntity): Flow<Unit> {
-        TODO("Not yet implemented")
+    override suspend fun getFavorite(): List<Movie>? {
+        return repository.getFavorite()?.map { it.toDomain() }
     }
 
-    override fun insertProfile(item: ProfileEntity): Flow<Unit> {
-        TODO("Not yet implemented")
+    override suspend fun getFavorite(id: Int): Boolean {
+        return repository.getFavorite(id)
     }
 
+    override suspend fun clearFavorite() {
+        return repository.clearFavorite()
+    }
 }

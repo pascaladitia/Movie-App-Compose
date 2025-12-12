@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.pascal.movie.data.local.repository.LocalRepositoryImpl
 import com.pascal.movie.domain.model.Movie
+import com.pascal.movie.domain.usecase.local.LocalUseCase
 import com.pascal.movie.domain.usecase.movie.MovieUseCase
 import com.pascal.movie.ui.screen.home.state.HomeUIState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,7 @@ import org.koin.android.annotation.KoinViewModel
 @KoinViewModel
 class HomeViewModel(
     private val movieUseCase: MovieUseCase,
-    private val localUseCase: LocalRepositoryImpl
+    private val localUseCase: LocalUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUIState())

@@ -1,11 +1,11 @@
 package com.pascal.movie.domain.usecase.local
 
-import com.pascal.movie.data.local.entity.ProfileEntity
-import kotlinx.coroutines.flow.Flow
+import com.pascal.movie.domain.model.Movie
 
 interface LocalUseCase {
-    fun getProfileById(id: Long): Flow<ProfileEntity?>
-    fun getAllProfiles(): Flow<List<ProfileEntity>>
-    fun deleteProfileById(item: ProfileEntity): Flow<Unit>
-    fun insertProfile(item: ProfileEntity): Flow<Unit>
+    suspend fun insertFavorite(entity: Movie)
+    suspend fun deleteFavorite(entity: Movie)
+    suspend fun getFavorite(): List<Movie>?
+    suspend fun getFavorite(id: Int): Boolean
+    suspend fun clearFavorite()
 }

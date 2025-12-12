@@ -31,7 +31,7 @@ class MoviesPagingSource(
                 MovieTab.UPCOMING -> KtorClientApi.getUpcoming(page).results.orEmpty()
                 MovieTab.TV_SHOWS -> KtorClientApi.getTvShow(page).results.orEmpty()
                 MovieTab.FAVORITES -> if (page == 1) {
-                    localRepository.getFavoriteMovies()?.map {
+                    localRepository.getFavorite()?.map {
                         emptyMoviesResponse.copy(id = it.id, posterPath = it.posterPath)
                     }.orEmpty()
                 } else emptyList()
