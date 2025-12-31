@@ -3,15 +3,15 @@ package com.pascal.movie.ui.screen.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import com.pascal.movie.domain.model.Movie
 import com.pascal.movie.domain.usecase.local.LocalUseCase
 import com.pascal.movie.domain.usecase.movie.MovieUseCase
 import com.pascal.movie.ui.screen.home.state.HomeUIState
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -31,36 +31,47 @@ class HomeViewModel(
     fun loadMovies(selection: MovieTab) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            movieUseCase.getMovies(selection)
-                .cachedIn(viewModelScope)
-                .collectLatest { pagingData ->
-                    _moviesResponse.value = pagingData
-                    _uiState.update { it.copy(isLoading = false) }
-                }
-        }
-    }
 
-    fun loadMoviesCatalog(page: Int = 1) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            movieUseCase.getMoviesCatalog(page)
-                .collectLatest { result ->
+            movieUseCase.getMovies(selection)
+                .catch { e ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            moviesResponse2 = result
+                            isError = true to e.message.toString()
                         )
                     }
+                }
+                .collect { pagingData ->
+                    _uiState.update { it.copy(isLoading = false) }
+                    _moviesResponse.value = pagingData
                 }
         }
     }
 
-    fun setLoading(value: Boolean) {
-        _uiState.update { it.copy(isLoading = value) }
+    suspend fun loadMoviesCatalog(page: Int = 1) {
+        _uiState.update { it.copy(isLoading = true) }
+
+        movieUseCase.getMoviesCatalog(page)
+            .catch { e ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isError = true to e.message.toString()
+                    )
+                }
+            }
+            .collect { result ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        moviesResponse2 = result.toImmutableList()
+                    )
+                }
+            }
     }
 
-    fun setError(value: Boolean) {
-        _uiState.update { it.copy(isError = value) }
+    fun hideError() {
+        _uiState.update { it.copy(isError = false to "") }
     }
 }
 

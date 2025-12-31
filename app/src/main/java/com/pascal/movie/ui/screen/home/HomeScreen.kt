@@ -17,6 +17,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
@@ -52,6 +53,7 @@ import com.pascal.movie.ui.screen.home.state.LocalHomeEvent
 import com.pascal.movie.ui.theme.MovieTheme
 import com.pascal.movie.utils.Constant.POSTER_BASE_URL
 import com.pascal.movie.utils.Constant.W185
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -76,12 +78,12 @@ fun HomeScreen(
         viewModel.loadMoviesCatalog()
     }
 
-    if (uiState.isError) {
+    if (uiState.isError.first) {
         ShowDialog(
-            message = uiState.message,
+            message = uiState.isError.second,
             textButton = stringResource(R.string.close)
         ) {
-            viewModel.setError(false)
+            viewModel.hideError()
         }
     }
 
@@ -116,7 +118,7 @@ private fun HomeContent(
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     moviesResponse: LazyPagingItems<Movie>? = null,
-    moviesResponse2: List<Movie>? = null,
+    moviesResponse2: ImmutableList<Movie>? = null,
 ) {
     val event = LocalHomeEvent.current
     val coroutine = rememberCoroutineScope()
@@ -133,122 +135,118 @@ private fun HomeContent(
         pageCount = { tabTitles.size }
     )
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .padding(top = 24.dp)
             .animateContentSize()
     ) {
-        Spacer(Modifier.height(24.dp))
-
-        AnimatedVisibility(
-            visible = isContentVisible,
-            enter = fadeIn(tween(500)) + slideInHorizontally(tween(1000)),
-            exit = fadeOut(tween(500)) + slideOutHorizontally(tween(1000)) { it }
-        ) {
-            ScrollableTabRow(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
-                selectedTabIndex = pagerState.currentPage,
-                containerColor = Color.Transparent,
-                edgePadding = 0.dp,
-                divider = {},
-                indicator = {}
+        item {
+            AnimatedVisibility(
+                visible = isContentVisible,
+                enter = fadeIn(tween(500)) + slideInHorizontally(tween(1000)),
+                exit = fadeOut(tween(500)) + slideOutHorizontally(tween(1000)) { it }
             ) {
-                tabTitles.forEachIndexed { index, movie ->
-                    Box {
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .clickable {
-                                    coroutine.launch {
-                                        event.onCategory(movie)
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                },
-                            text = movie.title,
-                            style = if (pagerState.currentPage == index) MaterialTheme.typography.titleMedium
-                            else MaterialTheme.typography.bodySmall,
-                            color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        with(sharedTransitionScope) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxWidth()
-            ) { page ->
-                LazyRowCarousel(
-                    isContentVisible = isContentVisible,
-                    moviesResponse = moviesResponse,
-                    animatedVisibilityScope = animatedVisibilityScope
+                ScrollableTabRow(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth(),
+                    selectedTabIndex = pagerState.currentPage,
+                    containerColor = Color.Transparent,
+                    edgePadding = 0.dp,
+                    divider = {},
+                    indicator = {}
                 ) {
-                    event.onDetail(it)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            AnimatedVisibility(
-                visible = isContentVisible,
-                enter = fadeIn(tween(500)),
-                exit = fadeOut(tween(500))
-            ) {
-                Text(
-                    text = "For you",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-
-            AnimatedVisibility(
-                visible = isContentVisible,
-                enter = fadeIn(tween(500)),
-                exit = fadeOut(tween(500))
-            ) {
-                Text(
-                    text = "See all",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        LazyRow(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            itemsIndexed(moviesResponse2 ?: emptyList()) { index, data ->
-                MovieItemGrid(
-                    item = data,
-                    index = index,
-                    isContentVisible = isContentVisible,
-                    hasAnimated = hasAnimated,
-                    onAnimated = { hasAnimated = true },
-                    onDetail = {
-                        coroutine.launch {
-                            event.onDetail(it)
+                    tabTitles.forEachIndexed { index, movie ->
+                        Box {
+                            Text(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .clickable {
+                                        coroutine.launch {
+                                            event.onCategory(movie)
+                                            pagerState.animateScrollToPage(index)
+                                        }
+                                    },
+                                text = movie.title,
+                                style = if (pagerState.currentPage == index) MaterialTheme.typography.titleMedium
+                                else MaterialTheme.typography.bodySmall,
+                                color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
-                )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            with(sharedTransitionScope) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth()
+                ) { page ->
+                    LazyRowCarousel(
+                        isContentVisible = isContentVisible,
+                        moviesResponse = moviesResponse,
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ) {
+                        event.onDetail(it)
+                    }
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                AnimatedVisibility(
+                    visible = isContentVisible,
+                    enter = fadeIn(tween(500)),
+                    exit = fadeOut(tween(500))
+                ) {
+                    Text(
+                        text = "For you",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = isContentVisible,
+                    enter = fadeIn(tween(500)),
+                    exit = fadeOut(tween(500))
+                ) {
+                    Text(
+                        text = "See all",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            LazyRow(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                itemsIndexed(moviesResponse2 ?: emptyList()) { index, data ->
+                    MovieItemGrid(
+                        item = data,
+                        index = index,
+                        isContentVisible = isContentVisible,
+                        hasAnimated = hasAnimated,
+                        onAnimated = { hasAnimated = true },
+                        onDetail = {
+                            coroutine.launch {
+                                event.onDetail(it)
+                            }
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 

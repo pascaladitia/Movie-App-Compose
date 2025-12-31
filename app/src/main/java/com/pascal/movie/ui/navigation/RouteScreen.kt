@@ -77,10 +77,14 @@ fun RouteScreen(
                     )
                 }
                 composable(route = Screen.FavoriteScreen.route) {
+                    val animScope: AnimatedVisibilityScope = this
                     FavoriteScreen(
                         paddingValues = paddingValues,
+                        sharedTransitionScope = sharedScope,
+                        animatedVisibilityScope = animScope,
                         onDetail = {
-                            navController.popBackStack()
+                            saveToCurrentBackStack(navController, "movies", it)
+                            navController.navigate(Screen.DetailScreen.route)
                         }
                     )
                 }

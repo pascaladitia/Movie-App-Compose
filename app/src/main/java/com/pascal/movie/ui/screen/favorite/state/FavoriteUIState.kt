@@ -1,11 +1,11 @@
-package com.pascal.movie.ui.screen.home.state
+package com.pascal.movie.ui.screen.favorite.state
 
 import com.pascal.movie.domain.model.Movie
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-data class HomeUIState(
+data class FavoriteUIState(
     val isLoading: Boolean = false,
     val isError: Pair<Boolean, String> = false to "",
-    val moviesResponse2: ImmutableList<Movie> = persistentListOf()
+    val moviesResponse: ImmutableList<Movie> = persistentListOf()
 )
