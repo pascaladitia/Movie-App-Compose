@@ -13,6 +13,7 @@ import com.pascal.movie.domain.model.movie.Movies
 import com.pascal.movie.ui.screen.detail.DetailScreen
 import com.pascal.movie.ui.screen.favorite.FavoriteScreen
 import com.pascal.movie.ui.screen.home.HomeScreen
+import com.pascal.movie.ui.screen.login.LoginScreen
 import com.pascal.movie.ui.screen.profile.ProfileScreen
 import com.pascal.movie.ui.screen.splash.SplashScreen
 import kotlinx.serialization.encodeToString
@@ -44,13 +45,26 @@ fun RouteScreen(
                 SplashScreen(
                     paddingValues = paddingValues
                 ) {
-                    navController.navigate( Screen.HomeScreen.route) {
+                    navController.navigate(Screen.LoginScreen.route) {
                         popUpTo(Screen.SplashScreen.route) {
                             inclusive = true
                         }
                         launchSingleTop = true
                     }
                 }
+            }
+            composable(route = Screen.LoginScreen.route) {
+                LoginScreen(
+                    paddingValues = paddingValues,
+                    onLoginSuccess = {
+                        navController.navigate(Screen.HomeScreen.route) {
+                            popUpTo(Screen.LoginScreen.route) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
             composable(route = Screen.HomeScreen.route) {
                 HomeScreen(

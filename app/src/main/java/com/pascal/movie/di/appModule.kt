@@ -8,6 +8,7 @@ import com.pascal.movie.ui.screen.detail.DetailViewModel
 import com.pascal.movie.ui.screen.home.HomeViewModel
 import com.pascal.movie.ui.screen.favorite.FavoriteViewModel
 import com.pascal.movie.ui.screen.profile.ProfileViewModel
+import com.pascal.movie.ui.screen.login.LoginViewModel
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
@@ -26,4 +27,5 @@ val appModule = module {
     singleOf(::FavoriteViewModel)
     singleOf(::ProfileViewModel)
     singleOf(::DetailViewModel)
+    singleOf(::LoginViewModel)
 }

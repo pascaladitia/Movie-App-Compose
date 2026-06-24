@@ -11,4 +11,14 @@ object PreferencesLogin {
         val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return sharedPreferences.getBoolean(IS_ADMIN, false)
     }
+
+    fun setIsAdmin(context: Context, isAdmin: Boolean) {
+        val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        sharedPreferences.edit().putBoolean(IS_ADMIN, isAdmin).apply()
+    }
+
+    fun clearSession(context: Context) {
+        val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        sharedPreferences.edit().clear().apply()
+    }
 }
